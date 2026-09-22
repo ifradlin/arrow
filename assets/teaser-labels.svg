@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1248 72">
+  <style>
+    text { fill: #1f2328; font: 600 20px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .compact { display: none; }
+    @media (prefers-color-scheme: dark) { text { fill: #f0f6fc; } }
+    @media (max-width: 600px) {
+      text { font-size: 36px; }
+      .wide { display: none; }
+      .compact { display: inline; }
+    }
+  </style>
+  <g class="wide" text-anchor="middle">
+    <text x="224" y="34">Multi-view 3D reconstruction</text>
+    <text x="624" y="34">3D tracking</text>
+    <text x="1024" y="34">Multi-view 3D tracking</text>
+  </g>
+  <g class="compact" text-anchor="middle">
+    <text x="224" y="28">Multi-view 3D<tspan x="224" y="64">reconstruction</tspan></text>
+    <text x="624" y="46">3D tracking</text>
+    <text x="1024" y="28">Multi-view<tspan x="1024" y="64">3D tracking</tspan></text>
+  </g>
+</svg>
