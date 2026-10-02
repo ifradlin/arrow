@@ -1,0 +1,43 @@
+/node_modules
+
+# External media storage: original exports, progressive bundles, images and references.
+/assets
+/dist
+/tables
+/justfile
+/tools/
+/tests/
+
+.codex/
+.agents/
+.vscode/
+.zed/
+
+# Media and binary exports belong in assets, never in source history.
+*.png
+*.webp
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.mp4
+*.mov
+*.webm
+*.pdf
+*.bin
+*.float32
+*.uint8
+*.npy
+*.npz
+*.gz
+*.zip
+*.bundle
+*.tar
+__pycache__/
+
+.env
+.env.*
+REQUIREMENTS.md
+
+# Bundles written by the D4RT viewer's publish tab, previewed with ?publish=<name>.
+/assets_sandbox
