@@ -1,0 +1,339 @@
+/* Comparison layout shares the project's viewer controls and theme. */
+[data-comparison-section] {
+  container-type: inline-size;
+}
+
+[data-comparison-section] [hidden],
+.viewer-shell[data-comparison-layout] [hidden] {
+  display: none !important;
+}
+.control-row-primary {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+.control-row-primary .example-picker {
+  margin: 0;
+}
+[data-comparison-section] .example-chip {
+  transition: background-color 160ms ease;
+}
+[data-comparison-section] .example-chip.is-active {
+  transition: none;
+}
+.scene-strip {
+  --scene-preview-height: clamp(3.5rem, 7vw, 5rem);
+  min-height: calc(var(--scene-preview-height) + 4px + 0.7rem);
+  display: flex;
+  justify-content: safe center;
+  gap: 0.65rem;
+  overflow-x: auto;
+  padding: 0.35rem;
+  margin-bottom: 1.25rem;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+[data-comparison-task="tracking"] [data-scene-task="reconstruction"],
+[data-comparison-task="reconstruction"] [data-scene-task="tracking"] {
+  display: none;
+}
+.scene-card {
+  --shimmer-base: light-dark(#ececec, #202020);
+  --shimmer-highlight: light-dark(#f8f8f8, #303030);
+  position: relative;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 2px solid var(--line);
+  border-radius: 0.65rem;
+  box-shadow: 0 0.15rem 0.4rem rgb(0 0 0 / 10%);
+  overflow: hidden;
+  scroll-snap-align: center;
+  opacity: 0.5;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    opacity 180ms ease;
+  background: var(--shimmer-base);
+  background-clip: padding-box;
+}
+.scene-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 -35%;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    color-mix(in srgb, var(--shimmer-highlight) 15%, transparent) 15%,
+    color-mix(in srgb, var(--shimmer-highlight) 40%, transparent) 30%,
+    color-mix(in srgb, var(--shimmer-highlight) 65%, transparent) 50%,
+    color-mix(in srgb, var(--shimmer-highlight) 40%, transparent) 70%,
+    color-mix(in srgb, var(--shimmer-highlight) 15%, transparent) 85%,
+    transparent 100%
+  );
+  transform: translateX(-110%);
+  animation: scene-preview-shimmer 1.8s ease-in-out infinite;
+}
+.scene-card img {
+  position: relative;
+  display: block;
+  width: auto;
+  height: var(--scene-preview-height);
+}
+.has-js .scene-card img:not([data-preview-state="ready"]) {
+  opacity: 0;
+}
+.scene-card:has(img[data-preview-state="ready"]),
+.scene-card:has(img[data-preview-state="error"]) {
+  background: var(--tint);
+}
+.scene-card:has(img[data-preview-state="ready"])::before,
+.scene-card:has(img[data-preview-state="error"])::before {
+  display: none;
+  animation: none;
+}
+@keyframes scene-preview-shimmer {
+  from {
+    transform: translateX(-110%);
+  }
+  to {
+    transform: translateX(110%);
+  }
+}
+.scene-card[aria-pressed="true"] {
+  opacity: 1;
+  border-color: var(--blue);
+  box-shadow:
+    0 0.15rem 0.4rem rgb(0 0 0 / 10%),
+    0 0 0 0.15rem color-mix(in srgb, var(--blue) 12%, transparent);
+}
+.scene-card:focus-visible {
+  opacity: 1;
+}
+@media (hover: hover) and (pointer: fine) {
+  .scene-card:hover {
+    opacity: 1;
+  }
+  .scene-card:hover:not([aria-pressed="true"]) {
+    border-color: color-mix(in srgb, var(--blue) 45%, transparent);
+  }
+}
+.comparison-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  isolation: isolate;
+}
+.model-panel {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  position: relative;
+}
+.viewer-shell[data-comparison-layout="split"] > .viewer-stage > .panel-b {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(0 0 0 var(--split, 50%));
+}
+.viewer-shell[data-comparison-layout="split"] > .viewer-stage > .viewer-canvas {
+  clip-path: inset(0 calc(100% - var(--split, 50%)) 0 0);
+}
+.viewer-stage > .panel-b {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+}
+.comparison-navigation {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  touch-action: pan-y;
+}
+.comparison-navigation:focus-visible {
+  box-shadow: none;
+}
+.panel-b [data-viewer-host] {
+  height: 100%;
+}
+.panel-b .viewer-shell:not(.is-ready) .viewer-canvas {
+  visibility: hidden;
+}
+.comparison-stage.is-comparing .viewer-shell {
+  height: 100%;
+}
+.panel-b .viewer-shell {
+  display: block;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.panel-b .viewer-shell::before,
+.panel-b .viewer-toolbar,
+.panel-b .viewer-controls,
+.panel-b .viewer-settings,
+.panel-b .viewer-loading,
+.panel-b .viewer-video-fallback,
+.panel-b .rgb-inset,
+.panel-b .static-observations,
+.panel-b .viewer-touch-lock,
+.panel-b .viewer-note {
+  display: none !important;
+}
+.panel-b .viewer-stage {
+  height: 100% !important;
+  min-height: 0 !important;
+  aspect-ratio: auto !important;
+  margin: 0 !important;
+}
+.panel-b .viewer-shell,
+.panel-b .viewer-stage {
+  background: transparent !important;
+}
+.method-bubble {
+  --method-bubble-height: clamp(2.1rem, 1.6rem + 2vw, 2.5rem);
+  --method-bubble-padding-x: clamp(0.6rem, 0.4rem + 0.8vw, 0.75rem);
+  --method-bubble-padding-y: clamp(0.35rem, 0.15rem + 0.8vw, 0.5rem);
+  position: absolute;
+  display: flex;
+  align-items: center;
+  min-height: var(--method-bubble-height);
+  z-index: 5;
+  top: calc(var(--bar-height) + var(--viewer-inset));
+  left: var(--viewer-inset);
+  padding: var(--method-bubble-padding-y) var(--method-bubble-padding-x);
+  border: 1px solid var(--viewer-glass-border);
+  border-radius: 0.6rem;
+  background: rgb(9 18 42 / 68%);
+  backdrop-filter: blur(18px);
+  color: #fff;
+  font-size: clamp(0.7rem, 0.575rem + 0.5vw, 0.8rem);
+  font-weight: 600;
+}
+.method-bubble[hidden] {
+  display: none;
+}
+.baseline-bubble {
+  left: auto;
+  right: var(--viewer-inset);
+  padding: 0;
+  z-index: 5;
+}
+.baseline-bubble::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: calc(var(--method-bubble-padding-x) + 0.1rem);
+  width: 0.4rem;
+  height: 0.4rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+.viewer-stage > .method-bubble {
+  top: var(--viewer-inset);
+}
+.viewer-stage > .method-bubble.baseline-bubble,
+.viewer-stage > .reference-bubble {
+  top: auto;
+  bottom: var(--viewer-inset);
+}
+.method-bubble select {
+  appearance: none;
+  height: calc(var(--method-bubble-height) - 2px);
+  max-width: 14rem;
+  padding: var(--method-bubble-padding-y) calc(var(--method-bubble-padding-x) + 1.25rem) var(--method-bubble-padding-y)
+    var(--method-bubble-padding-x);
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+.method-bubble option {
+  color: var(--ink);
+  background: var(--paper);
+}
+.method-bubble select:disabled {
+  opacity: 0.65;
+}
+.comparison-options {
+  margin-top: 0.5rem;
+}
+.splitter {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  bottom: 0;
+  left: var(--split, 50%);
+  width: 2px;
+  background: rgb(255 255 255 / 85%);
+  cursor: ew-resize;
+  touch-action: none;
+}
+.splitter::before {
+  content: "";
+  position: absolute;
+  inset: 0 -20px;
+}
+.splitter span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: grid;
+  place-items: center;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--viewer-glass-border);
+  border-radius: 50%;
+  background: var(--viewer-glass);
+  backdrop-filter: blur(18px);
+  color: var(--ink);
+}
+.splitter svg {
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.viewer-shell.is-comparison-transitioning > .viewer-stage > .viewer-canvas,
+.viewer-shell.is-comparison-transitioning > .viewer-stage > .rgb-inset,
+.viewer-shell.is-comparison-transitioning > .viewer-stage > .static-observations {
+  opacity: 0 !important;
+}
+.viewer-shell.is-comparison-transitioning.has-fallback-frame:not(.is-cached-switch)
+  > .viewer-stage
+  > .viewer-video-fallback {
+  opacity: 0.48;
+}
+@media (pointer: fine) {
+  .splitter::before {
+    inset-inline: -10px;
+  }
+}
+@media (max-width: 720px) {
+  .scene-strip {
+    margin-inline: calc((100% - 100cqw) / 2);
+    padding-inline: calc((100cqw - 100%) / 2 + 0.35rem);
+  }
+}
+@media (max-width: 640px) {
+  .method-bubble select {
+    max-width: 10rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-comparison-section] .example-chip {
+    transition: none;
+  }
+  .scene-card::before {
+    animation: none;
+    display: none;
+  }
+  .scene-card {
+    transition: none;
+  }
+}

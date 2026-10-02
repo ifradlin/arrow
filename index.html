@@ -1,0 +1,2149 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <script type="importmap">
+      { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js" } }
+    </script>
+    <script>
+      (() => {
+        let theme;
+        try {
+          theme = localStorage.getItem("arrow-theme");
+        } catch {}
+        if (theme !== "light" && theme !== "dark") {
+          theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme;
+      })();
+    </script>
+    <script src="./static/js/navigation.js" defer></script>
+    <script type="module" src="./static/js/tab-bars.js" fetchpriority="high"></script>
+    <script>
+      document.documentElement.classList.add("has-js");
+      (() => {
+        const root = document.documentElement;
+        const update = () => root.classList.toggle("menu-scrolled", window.scrollY > 24);
+        const restore = () => {
+          root.classList.remove("menu-ready");
+          update();
+          requestAnimationFrame(() => {
+            update();
+            requestAnimationFrame(() => root.classList.add("menu-ready"));
+          });
+        };
+        window.addEventListener("scroll", update, { passive: true });
+        window.addEventListener("pageshow", restore);
+        window.addEventListener("pagehide", () => root.classList.remove("menu-ready"));
+        update();
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="ARROW unifies 3D reconstruction and point tracking from arbitrary RGB observations through order-invariant querying and training across viewpoints and capture times."
+    />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0e" />
+    <title>ARROW: Arbitrary Reconstruction and Tracking of 4D Observations in the Wild</title>
+    <link rel="icon" type="image/svg+xml" href="./assets/images/icon.svg" />
+    <style>
+      html {
+        color-scheme: light dark;
+      }
+
+      html,
+      body {
+        background: #fff;
+      }
+
+      html[data-theme="dark"] {
+        background: #0a0a0e;
+      }
+
+      html[data-theme="dark"] body {
+        background: #0a0a0e;
+      }
+    </style>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="image" href="./assets/images/arrow-concept-preview.webp?v=3" type="image/webp" />
+    <link
+      rel="preload"
+      as="image"
+      href="./assets/images/arrow-architecture-preview.webp?v=20261002"
+      type="image/webp"
+    />
+    <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css" />
+    <link rel="stylesheet" href="./static/css/site.css" />
+    <link rel="stylesheet" href="./static/css/comparison.css" />
+    <script type="module" src="./static/js/site.js"></script>
+    <script type="module" src="./static/js/results.js"></script>
+    <script type="module" src="./static/js/radar.js"></script>
+    <script type="module" src="./static/js/scene-previews.js"></script>
+    <script type="module" src="./static/js/comparison.js"></script>
+  </head>
+
+  <body id="top">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+
+    <header class="site-header" id="site-header">
+      <div class="page-shell header-inner">
+        <a class="wordmark" href="#top" aria-label="Arrow home"
+          ><img src="./assets/images/icon-header.webp" width="96" height="69" alt="" />ARROW</a
+        >
+        <div class="header-actions">
+          <nav class="site-nav" aria-label="Primary navigation">
+            <a href="#overview">Capabilities</a>
+            <a href="#method">Method</a>
+            <a href="#examples">Examples</a>
+            <a href="#results">Results</a>
+          </nav>
+          <div class="header-controls">
+            <button
+              class="theme-toggle viewer-settings-button"
+              type="button"
+              data-theme-toggle
+              aria-label="Switch theme"
+              aria-pressed="false"
+            >
+              <svg class="theme-moon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+              </svg>
+              <svg class="theme-sun" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="4" />
+                <path
+                  d="M12 2v2m0 16v2M2 12h2m16 0h2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="hero section-space">
+        <span class="hero-glow" aria-hidden="true"></span>
+        <div class="page-shell hero-content">
+          <h1>ARROW: Arbitrary Reconstruction and Tracking of 4D Observations in the Wild</h1>
+
+          <p class="authors">
+            <span><a href="https://ifradlin.github.io">Ilya Fradlin</a></span>
+            <span><a href="https://github.com/Schmiddo">Christian Schmidt</a></span>
+            <span><a href="https://github.com/jenspiek">Jens Piekenbrinck</a></span>
+            <span><a href="https://karimknaebel.com">Karim Knaebel</a></span>
+            <span><a href="https://gonzalomartingarcia.com/">Gonzalo Martin Garcia</a></span>
+            <span><a href="https://scholar.google.com/citations?user=ZcULDB0AAAAJ">Bastian Leibe</a></span>
+          </p>
+          <p class="affiliations">RWTH Aachen University</p>
+
+          <div class="link-row" aria-label="Project links">
+            <a class="button button-primary" href="https://arxiv.org/pdf/2610.01314"
+              ><i class="fa-solid fa-file-pdf" aria-hidden="true"></i><span>Paper</span></a
+            >
+            <a class="button" href="https://arxiv.org/abs/2610.01314"
+              ><i class="ai ai-arxiv" aria-hidden="true"></i><span>arXiv</span></a
+            >
+            <a class="button" href="https://github.com/ifradlin/arrow"
+              ><i class="fa-brands fa-github" aria-hidden="true"></i><span>Code</span></a
+            >
+            <button class="button" type="button" disabled>
+              <i class="fa-solid fa-cube" aria-hidden="true"></i><span>Models (soon)</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-space section-tint" id="overview" data-default-example="allpix">
+        <div class="page-shell">
+          <div class="section-heading section-heading-centered">
+            <p class="eyebrow">Capabilities</p>
+            <h2>Reconstruction and tracking from any RGB observations</h2>
+            <p>
+              Photo collections, moving-camera videos, and synchronized camera streams provide complementary evidence of
+              geometry and motion. ARROW reconstructs and tracks points across these inputs without requiring a temporal
+              ordering of the observations.
+            </p>
+          </div>
+          <div data-capabilities-viewer>
+            <nav class="example-picker" aria-label="Capabilities">
+              <span class="example-picker-indicator" aria-hidden="true"></span>
+              <a
+                class="example-chip"
+                data-example="allpix"
+                data-manifest="./assets/exports/progressive/judo/arrow/manifest.json"
+                href="?capability=allpix#overview"
+                >All-pixel tracking</a
+              >
+              <a
+                class="example-chip"
+                data-example="mv-allpix"
+                data-manifest="./assets/exports/progressive/pstudio-basketball/arrow/manifest.json"
+                href="?capability=mv-allpix#overview"
+                >Multiview tracking</a
+              >
+              <a
+                class="example-chip"
+                data-example="brandenburg"
+                data-manifest="./assets/exports/progressive/brandenburger-tor/arrow/manifest.json"
+                href="?capability=brandenburg#overview"
+                >Static image collection</a
+              >
+            </nav>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-space">
+        <div class="page-shell content-narrow">
+          <div class="section-heading section-heading-centered">
+            <p class="eyebrow">Paper</p>
+            <h2>Abstract</h2>
+          </div>
+          <p class="abstract-copy">
+            Dynamic scenes may be captured by a moving camera, multiple video streams, or images taken at different
+            times. These observations reveal complementary aspects of scene geometry and motion, yet bringing them
+            together requires establishing correspondence across viewpoints, capture times, and visibility changes. We
+            introduce ARROW, a feed-forward model that unifies 3D reconstruction and 3D point tracking from arbitrary
+            image sets. At its core is a novel order-invariant querying approach, which allows the association of
+            queries with observations across arbitrary inputs. We show that exposing the model to more diverse sets of
+            inputs during training results in improved task performance. Moreover, the resulting model is capable of
+            generalization to a wider range of tasks including multi-view tracking. Trained with this strategy, ARROW
+            establishes a new state of the art in 3D tracking on WorldTrack and TAPVid-3D and outperforms dedicated
+            multi-view trackers on an adapted RGB-only MVTracker benchmark, while remaining competitive across 3D
+            reconstruction tasks.
+          </p>
+        </div>
+      </section>
+
+      <section class="section-space section-tint">
+        <div class="page-shell">
+          <div class="section-heading section-heading-centered">
+            <p class="eyebrow">At a glance</p>
+            <h2>Key-Takeaways</h2>
+          </div>
+          <ol class="takeaway-grid">
+            <li>
+              <span class="takeaway-number">01</span>
+              <h3>One representation.<br />Any observation mix.</h3>
+              <p>
+                Reconstruct and track across image sets, videos, multi-view streams, or any combination through the same
+                rich scene representation.
+              </p>
+            </li>
+            <li>
+              <span class="takeaway-number">02</span>
+              <h3>Predict identities.<br />Query in any order.</h3>
+              <p>
+                Predicted observation identities replace learned timestep embeddings, enabling meaningful
+                cross-attention without explicit order and tracking beyond fixed temporal horizons.
+              </p>
+            </li>
+            <li>
+              <span class="takeaway-number">03</span>
+              <h3>Less temporal bias.<br />Better tracking.</h3>
+              <p>
+                Dropping temporal inductive bias broadens supervision across viewpoints and distant times, improving
+                tracking performance.
+              </p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="section-space" id="method">
+        <div class="page-shell">
+          <div class="section-heading">
+            <p class="eyebrow">Approach</p>
+            <h2>Method</h2>
+            <p>
+              A query identifies a pixel in a source image, a target observation's capture time, and a reference
+              camera's coordinate system. ARROW predicts that physical point's 3D position using the shared context of
+              all input observations.
+            </p>
+          </div>
+
+          <figure class="paper-figure concept-figure">
+            <picture class="paper-image is-loading">
+              <source srcset="./assets/images/arrow-concept.webp?v=20260930" type="image/webp" />
+              <img
+                src="./assets/images/arrow-concept.png?v=20260930"
+                width="2491"
+                height="594"
+                loading="lazy"
+                decoding="async"
+                alt="Three-panel comparison: order-dependent queries match ordered video features; fixed query embeddings fail with unordered image features; ARROW uses content-derived identity tokens to associate queries with observations."
+              />
+            </picture>
+            <figcaption>
+              <strong>From indexed to input-dependent correspondence.</strong> (a) Order-aware global context enables
+              position-based associations. (b) Order-invariant global context exposes no fixed order to exploit. (c)
+              Content-derived identity embeddings enable order-invariant associations.
+            </figcaption>
+          </figure>
+
+          <figure class="paper-figure architecture-figure">
+            <picture class="paper-image is-loading">
+              <source srcset="./assets/images/arrow-architecture.webp?v=20261002" type="image/webp" />
+              <img
+                src="./assets/images/arrow-architecture.png?v=20261002"
+                width="3342"
+                height="1530"
+                loading="lazy"
+                decoding="async"
+                alt="ARROW architecture: a multi-view encoder produces shared context and observation identity tokens; a query encoder combines a source RGB patch, pixel coordinates, and source, target, and reference identities; independent queries decode 3D predictions."
+              />
+            </picture>
+            <figcaption>
+              <strong>ARROW architecture.</strong> A multi-view encoder produces shared image context and one
+              content-derived ID token per observation, without temporal encodings. Each query independently attends to
+              this context, so one encoding serves both sparse tracking and dense reconstruction.
+            </figcaption>
+          </figure>
+
+          <div class="method-grid">
+            <article class="method-step">
+              <span>01</span>
+              <h3>Encode any input</h3>
+              <p>Images, videos, and multi-view streams share one context, without an imposed input order.</p>
+            </article>
+            <article class="method-step">
+              <span>02</span>
+              <h3>Compose queries with identities</h3>
+              <p>Predicted identities associate each query with the intended observations in the global context.</p>
+            </article>
+            <article class="method-step">
+              <span>03</span>
+              <h3>Flexible inputs, flexible predictions</h3>
+              <p>
+                Query any source point, target observation, and reference view for sparse tracking or dense
+                reconstruction.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-space section-tint" id="examples" data-comparison-section aria-label="Model comparison">
+        <div class="page-shell">
+          <div class="section-heading section-heading-centered">
+            <p class="eyebrow">Examples</p>
+            <h2>Compare geometry and motion</h2>
+            <p>Explore predictions from the same observations, with ARROW as the reference.</p>
+          </div>
+          <div class="control-row-primary">
+            <div class="example-picker" role="group" aria-label="Comparison task">
+              <button class="example-chip is-active" type="button" aria-pressed="true" data-task="tracking">
+                Tracking
+              </button>
+              <button class="example-chip" type="button" aria-pressed="false" data-task="reconstruction">
+                Reconstruction
+              </button>
+            </div>
+          </div>
+          <script>
+            (() => {
+              const section = document.querySelector("[data-comparison-section]");
+              const requested =
+                new URLSearchParams(location.search).get("task") ??
+                new URLSearchParams(location.search).get("comparison");
+              const task = requested === "recon" || requested === "reconstruction" ? "reconstruction" : "tracking";
+              section.dataset.comparisonTask = task;
+              section.querySelectorAll("[data-task]").forEach((button) => {
+                const active = button.dataset.task === task;
+                button.classList.toggle("is-active", active);
+                button.setAttribute("aria-pressed", String(active));
+              });
+            })();
+          </script>
+          <nav class="scene-strip" data-scenes aria-label="Scenes">
+            <button
+              class="scene-card"
+              type="button"
+              data-scene="davis"
+              data-scene-task="tracking"
+              aria-label="DAVIS Train"
+              title="DAVIS Train"
+              aria-pressed="true"
+            >
+              <img
+                src="./assets/exports/progressive/davis-train/arrow/previews/0/000000.jpg"
+                width="504"
+                height="280"
+                alt=""
+                draggable="false"
+              />
+            </button>
+            <button
+              class="scene-card"
+              type="button"
+              data-scene="horse"
+              data-scene-task="tracking"
+              aria-label="Horse jump"
+              title="Horse jump"
+              aria-pressed="false"
+            >
+              <img
+                src="./assets/exports/progressive/horse-jump/arrow/previews/0/000000.jpg"
+                width="504"
+                height="280"
+                alt=""
+                draggable="false"
+              />
+            </button>
+            <button
+              class="scene-card"
+              type="button"
+              data-scene="bus"
+              data-scene-task="tracking"
+              aria-label="DAVIS Bus"
+              title="DAVIS Bus"
+              aria-pressed="false"
+            >
+              <img
+                src="./assets/exports/progressive/bus/arrow/previews/0/000000.jpg"
+                width="504"
+                height="280"
+                alt=""
+                draggable="false"
+              />
+            </button>
+            <button
+              class="scene-card"
+              type="button"
+              data-scene="swan"
+              data-scene-task="tracking"
+              aria-label="Swan"
+              title="Swan"
+              aria-pressed="false"
+            >
+              <img
+                src="./assets/exports/progressive/swan/arrow/previews/0/000000.jpg"
+                width="504"
+                height="280"
+                alt=""
+                draggable="false"
+              />
+            </button>
+            <button
+              class="scene-card"
+              type="button"
+              data-scene="dance"
+              data-scene-task="tracking"
+              aria-label="Dance"
+              title="Dance"
+              aria-pressed="false"
+            >
+              <img
+                src="./assets/exports/progressive/dance-twirl/arrow/previews/0/000000.jpg"
+                width="504"
+                height="280"
+                alt=""
+                draggable="false"
+              />
+            </button>
+            <button
+              class="scene-card"
+              type="button"
+              data-scene="kubric-20"
+              data-scene-task="tracking"
+              aria-label="Kubric"
+              title="Kubric"
+              aria-pressed="false"
+            >
+              <img
+                src="./assets/exports/progressive/kubric-20/arrow/previews/0/000000.jpg"
+                width="504"
+                height="504"
+                alt=""
+                draggable="false"
+              />
+            </button>
+            <button
+              class="scene-card"
+              type="button"
+              data-scene="umic"
+              data-scene-task="reconstruction"
+              aria-label="UMIC"
+              title="UMIC"
+              aria-pressed="true"
+            >
+              <img
+                src="./assets/exports/progressive/umic/arrow/previews/0/000000.jpg"
+                width="378"
+                height="504"
+                alt=""
+                draggable="false"
+              />
+            </button>
+            <button
+              class="scene-card"
+              type="button"
+              data-scene="mono-chair"
+              data-scene-task="reconstruction"
+              aria-label="Chair"
+              title="Chair"
+              aria-pressed="false"
+            >
+              <img
+                src="./assets/exports/progressive/mono-chair/arrow/previews/0/000000.jpg"
+                width="504"
+                height="280"
+                alt=""
+                draggable="false"
+              />
+            </button>
+            <button
+              class="scene-card"
+              type="button"
+              data-scene="drone"
+              data-scene-task="reconstruction"
+              aria-label="Drone"
+              title="Drone"
+              aria-pressed="false"
+            >
+              <img
+                src="./assets/exports/progressive/drone/arrow/previews/0/000000.jpg"
+                width="504"
+                height="378"
+                alt=""
+                draggable="false"
+              />
+            </button>
+            <button
+              class="scene-card"
+              type="button"
+              data-scene="chess"
+              data-scene-task="reconstruction"
+              aria-label="Chess"
+              title="Chess"
+              aria-pressed="false"
+            >
+              <img
+                src="./assets/exports/progressive/chess/arrow/previews/0/000000.jpg"
+                width="504"
+                height="378"
+                alt=""
+                draggable="false"
+              />
+            </button>
+          </nav>
+          <script>
+            (() => {
+              const section = document.querySelector("[data-comparison-section]");
+              const requestedScene =
+                new URLSearchParams(location.search).get("scene") ??
+                new URLSearchParams(location.search).get("example");
+              const cards = [...section.querySelectorAll("[data-scene]")];
+              const available = cards.filter((card) => card.dataset.sceneTask === section.dataset.comparisonTask);
+              const selected = available.find((card) => card.dataset.scene === requestedScene) || available[0];
+              cards.forEach((card) => card.setAttribute("aria-pressed", String(card === selected)));
+              if (!selected) return;
+              const strip = section.querySelector("[data-scenes]");
+              let interacted = false;
+              strip.addEventListener(
+                "pointerdown",
+                () => {
+                  interacted = true;
+                },
+                { once: true },
+              );
+              requestAnimationFrame(() => {
+                if (interacted) return;
+                const edge = selected.offsetLeft + selected.offsetWidth;
+                if (edge > strip.clientWidth) strip.scrollLeft = edge - strip.clientWidth + 6;
+              });
+            })();
+          </script>
+          <div class="comparison-stage" data-stage>
+            <article class="model-panel panel-a" data-panel-a aria-label="ARROW prediction">
+              <div data-viewer-host="arrow"></div>
+              <p class="missing-prediction" data-missing-arrow hidden>
+                ARROW prediction not exported for this scene yet.
+              </p>
+              <div class="method-bubble reference-bubble" data-reference-bubble hidden>ARROW</div>
+            </article>
+            <article class="model-panel panel-b" data-panel-b aria-label="Comparison prediction" hidden>
+              <div data-viewer-host="baseline"></div>
+              <p class="missing-prediction" data-missing-baseline hidden>No prediction exported for this method yet.</p>
+            </article>
+            <label class="method-bubble baseline-bubble" hidden
+              ><select data-model-b aria-label="Comparison method"></select
+            ></label>
+            <div
+              class="splitter"
+              data-splitter
+              hidden
+              role="separator"
+              aria-label="Drag to compare models"
+              aria-orientation="vertical"
+              aria-valuemin="5"
+              aria-valuemax="95"
+              aria-valuenow="50"
+              tabindex="0"
+            >
+              <span aria-hidden="true">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M8 7l-5 5 5 5M3 12h18M16 7l5 5-5 5" />
+                </svg>
+              </span>
+            </div>
+          </div>
+        </div>
+        <template id="comparison-viewer-template" data-comparison-template>
+          <div
+            class="viewer-shell"
+            data-arrow-viewer
+            data-viewer-manual
+            data-progressive-root="./assets/exports/progressive"
+          >
+            <div class="viewer-toolbar">
+              <div class="viewer-title"><strong data-viewer-title></strong><span data-viewer-meta></span></div>
+              <button
+                class="viewer-settings-button"
+                type="button"
+                data-reset-view
+                aria-label="Reset view"
+                title="Reset view"
+              >
+                <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+              </button>
+              <button
+                class="viewer-settings-button"
+                type="button"
+                data-viewer-expand
+                aria-pressed="false"
+                aria-label="Expand viewer"
+                title="Expand viewer"
+              >
+                <i class="fa-solid fa-expand" aria-hidden="true"></i>
+              </button>
+              <button
+                class="viewer-settings-button"
+                type="button"
+                data-settings-toggle
+                aria-expanded="false"
+                aria-controls="viewer-settings"
+                aria-label="Open viewer settings"
+              >
+                <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="viewer-settings" id="viewer-settings" data-settings-menu hidden>
+              <p>Settings</p>
+              <label class="viewer-setting viewer-setting-range"
+                ><span>Confidence cutoff <small data-confidence-value>0%</small></span
+                ><input type="range" autocomplete="off" min="0" max="100" step="1" value="0" data-confidence-cutoff
+              /></label>
+              <label class="viewer-setting viewer-setting-range"
+                ><span>Point size <small data-point-size-value>0.050</small></span
+                ><input
+                  type="range"
+                  autocomplete="off"
+                  min="0.005"
+                  max="0.15"
+                  step="0.001"
+                  value="0.05"
+                  data-point-size
+              /></label>
+              <label class="viewer-setting" data-static-only
+                ><span>Show all cameras</span><input type="checkbox" autocomplete="off" data-static-all-cameras
+              /></label>
+              <label class="viewer-setting viewer-setting-range" data-static-hidden data-trajectory-only
+                ><span>Sampled trajectories <small data-trajectory-sample-value>2,048</small></span
+                ><input
+                  type="range"
+                  autocomplete="off"
+                  min="0"
+                  max="16384"
+                  step="1"
+                  value="2048"
+                  data-trajectory-sample
+              /></label>
+              <label class="viewer-setting viewer-setting-range" data-static-hidden data-trajectory-only
+                ><span>Trajectory history <small data-trajectory-history-value>20 frames</small></span
+                ><input type="range" autocomplete="off" min="2" max="48" step="1" value="20" data-trajectory-history
+              /></label>
+              <label class="viewer-setting" data-multiview-only
+                ><span>Show all context cameras</span><input type="checkbox" autocomplete="off" data-keep-cameras
+              /></label>
+            </div>
+            <div class="viewer-stage" data-viewer-stage role="region" tabindex="0" aria-label="Interactive 4D scene">
+              <div class="viewer-scroll-gutter viewer-scroll-gutter-left" aria-hidden="true"></div>
+              <div class="viewer-scroll-gutter viewer-scroll-gutter-right" aria-hidden="true"></div>
+              <button class="viewer-touch-lock" type="button" data-touch-lock hidden>
+                <i class="fa-solid fa-lock" aria-hidden="true"></i><span>Double-tap to explore</span>
+              </button>
+              <video
+                class="viewer-video-fallback"
+                data-viewer-video
+                muted
+                loop
+                playsinline
+                preload="none"
+                aria-hidden="true"
+              ></video>
+              <div class="viewer-loading" data-viewer-loading role="status" aria-live="polite">
+                <svg
+                  class="viewer-loader-cube"
+                  viewBox="0 0 40 40"
+                  shape-rendering="geometricPrecision"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path data-loader-face fill="var(--loader-cube-face-0)" d="M20 5 34 12 20 20 6 12Z" />
+                  <path data-loader-face fill="var(--loader-cube-face-1)" d="M6 12 20 20 20 35 6 27Z" />
+                  <path data-loader-face fill="var(--loader-cube-face-2)" d="M20 20 34 12 34 27 20 35Z" />
+                  <path data-loader-face />
+                  <path data-loader-face />
+                  <path data-loader-face />
+                  <path
+                    data-loader-edges
+                    d="M20 5 34 12 34 27 20 35 6 27 6 12Z M6 12 20 20 34 12 M20 20 20 35"
+                    fill="none"
+                    stroke="var(--loader-cube-edge)"
+                    stroke-width="2.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <svg
+                  class="viewer-loader-error"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  focusable="false"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                >
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 7v6m0 4h0" stroke-width="2.4" />
+                </svg>
+                <div data-viewer-loading-text>Loading interactive scene…</div>
+              </div>
+              <div
+                class="rgb-inset"
+                data-rgb-inset
+                role="button"
+                tabindex="0"
+                aria-label="Follow the input camera"
+                title="Click to follow the input camera"
+              >
+                <video data-viewer-inset muted playsinline preload="none"></video>
+                <img data-viewer-preview hidden alt="Input frame" />
+              </div>
+              <div
+                class="static-observations"
+                data-static-observations
+                hidden
+                aria-label="Selected input observations"
+              ></div>
+            </div>
+            <div class="viewer-controls">
+              <button
+                class="play-button"
+                type="button"
+                data-play-toggle
+                aria-label="Pause Judo example"
+                aria-pressed="true"
+              >
+                <span class="play-icon" aria-hidden="true"><span></span><span></span></span>
+              </button>
+              <div class="viewer-scrubber" data-viewer-scrubber>
+                <input
+                  aria-label="Judo example frame"
+                  type="range"
+                  autocomplete="off"
+                  min="0"
+                  max="1"
+                  step="any"
+                  value="0"
+                  data-frame-slider
+                />
+                <div class="viewer-scrubber-visual" aria-hidden="true">
+                  <div class="viewer-buffered-ranges" data-buffered-ranges>
+                    <div class="viewer-scrubber-fill"></div>
+                  </div>
+                  <div class="viewer-scrubber-thumb" data-scrubber-thumb></div>
+                </div>
+              </div>
+              <output data-frame-output
+                ><span>Frame</span> <span data-frame-current>-</span> <span>/</span>
+                <span data-frame-total>-</span></output
+              >
+            </div>
+          </div>
+        </template>
+        <script>
+          (() => {
+            const section = document.querySelector("[data-comparison-section]");
+            const template = section.querySelector("[data-comparison-template]");
+            const shell = template.content.querySelector("[data-arrow-viewer]").cloneNode(true);
+            const tracking = section.dataset.comparisonTask === "tracking";
+            shell.dataset.mode = shell.dataset.inputMode = tracking ? "monocular_video" : "static_collection";
+            shell.querySelector("[data-viewer-title]").textContent = tracking ? "DAVIS Train" : "UMIC";
+            shell.querySelector("[data-settings-menu]").id = "comparison-settings-arrow";
+            shell.querySelector("[data-settings-toggle]").setAttribute("aria-controls", "comparison-settings-arrow");
+            shell.querySelector("[data-viewer-stage]").append(section.querySelector("[data-reference-bubble]"));
+            section.querySelector('[data-viewer-host="arrow"]').append(shell);
+          })();
+        </script>
+      </section>
+
+      <section class="section-space" id="results">
+        <div class="page-shell">
+          <div class="section-heading">
+            <p class="eyebrow">Evaluation</p>
+            <h2>Quantitative results</h2>
+            <p>
+              ARROW sets a new state of the art in 3D tracking on WorldTrack and TAPVid-3D, and outperforms dedicated
+              multi-view trackers on an adapted RGB-only MVTracker benchmark. Reconstruction and camera pose estimation
+              remain competitive. Longer bars are always better; tracking and video-depth plots use an adjusted range to
+              show differences more clearly. Labels show the original metric values. See the paper for full comparisons
+              and training ablations.
+            </p>
+          </div>
+          <div class="results-grid">
+            <article
+              class="result-card radar-card"
+              data-radar-card=""
+              data-radar-overview-only=""
+              aria-labelledby="radar-heading"
+            >
+              <div class="result-card-head">
+                <div>
+                  <span class="result-card-kicker">Four tasks</span>
+                  <h3 id="radar-heading">Performance across tasks</h3>
+                </div>
+              </div>
+              <p class="result-card-lead">
+                Compare ARROW, OmniX, 4RC, V-DPM and OpenD4RT across tracking, camera pose, reconstruction and depth.
+                Hover or tap a spoke or dataset label for the original numbers. Select a method in the legend to
+                highlight it; select it again to restore all methods.
+              </p>
+              <div class="radar-legend" aria-label="Methods">
+                <div aria-hidden="false" class="radar-legend-page is-active">
+                  <button
+                    data-legend-method="0"
+                    aria-pressed="false"
+                    style="--series-color: var(--radar-arrow)"
+                    class="radar-legend-item radar-method-0"
+                    type="button"
+                  >
+                    <svg aria-hidden="true" viewBox="0 0 24 4">
+                      <path stroke-dasharray="" stroke-width="3" stroke="var(--series-color)" d="M0 2H24" /></svg
+                    >ARROW</button
+                  ><button
+                    data-legend-method="1"
+                    aria-pressed="false"
+                    style="--series-color: light-dark(#007f89, #5dc5ca)"
+                    class="radar-legend-item radar-method-1"
+                    type="button"
+                  >
+                    <svg aria-hidden="true" viewBox="0 0 24 4">
+                      <path stroke-dasharray="8 4" stroke-width="2" stroke="var(--series-color)" d="M0 2H24" /></svg
+                    >OmniX</button
+                  ><button
+                    data-legend-method="2"
+                    aria-pressed="false"
+                    style="--series-color: light-dark(#7342a4, #b396e5)"
+                    class="radar-legend-item radar-method-2"
+                    type="button"
+                  >
+                    <svg aria-hidden="true" viewBox="0 0 24 4">
+                      <path stroke-dasharray="2 4" stroke-width="2" stroke="var(--series-color)" d="M0 2H24" /></svg
+                    >4RC</button
+                  ><button
+                    data-legend-method="5"
+                    aria-pressed="false"
+                    style="--series-color: light-dark(#ac397a, #ed8ec2)"
+                    class="radar-legend-item radar-method-5"
+                    type="button"
+                  >
+                    <svg aria-hidden="true" viewBox="0 0 24 4">
+                      <path stroke-dasharray="5 3 1 3" stroke-width="2" stroke="var(--series-color)" d="M0 2H24" /></svg
+                    >V-DPM</button
+                  ><button
+                    data-legend-method="6"
+                    aria-pressed="false"
+                    style="--series-color: light-dark(#8c7019, #d7b95e)"
+                    class="radar-legend-item radar-method-6"
+                    type="button"
+                  >
+                    <svg aria-hidden="true" viewBox="0 0 24 4">
+                      <path stroke-dasharray="" stroke-width="2" stroke="var(--series-color)" d="M0 2H24" /></svg
+                    >OpenD4RT
+                  </button>
+                </div>
+              </div>
+              <div class="radar-viewport" data-radar-viewport="">
+                <div class="radar-pages" data-radar-pages="">
+                  <div aria-hidden="false" data-prerendered="" class="radar-page">
+                    <svg
+                      aria-label="Across tasks. Logarithmic relative performance: farther out is better."
+                      role="group"
+                      class="radar-chart"
+                      viewBox="16 16 688 688"
+                    >
+                      <defs>
+                        <path
+                          d="M284.0511095268767,42.97040195606104 A326,326 0 0 1 685.0803098511046,384.4702298131789"
+                          id="radar-label-0-0"
+                        />
+                        <path
+                          d="M335.5297701868211,685.0803098511046 A326,326 0 0 0 677.0295980439389,435.9488904731233"
+                          id="radar-label-0-4"
+                        />
+                        <path
+                          d="M59.11977219793499,485.48740382117023 A326,326 0 0 0 284.05110952687676,677.029598043939"
+                          id="radar-label-0-7"
+                        />
+                        <path
+                          d="M42.97040195606104,435.94889047312336 A326,326 0 0 1 234.51259617882974,59.11977219793499"
+                          id="radar-label-0-9"
+                        />
+                        <clipPath id="radar-clip-0-0">
+                          <path
+                            d="M209.1240392099172,153.18499944232914 A256,256 0 0 1 475.99946990770866,131.78930134384453 L360,360  Z"
+                          />
+                        </clipPath>
+                        <path
+                          d="M303.50549981602876,89.84380175727364 A276,276 0 0 1 416.49450018397124,89.84380175727364"
+                          id="radar-axis-0-0"
+                        />
+                        <clipPath id="radar-clip-0-1">
+                          <path d="M360,104 A256,256 0 0 1 566.8150005576708,209.12403920991719 L360,360  Z" />
+                        </clipPath>
+                        <path
+                          d="M432.0520563719677,93.57083272927719 A276,276 0 0 1 532.775879475205,144.76873955772726"
+                          id="radar-axis-0-1"
+                        />
+                        <clipPath id="radar-clip-0-2">
+                          <path
+                            d="M475.99946990770866,131.78930134384453 A256,256 0 0 1 612.7301845441605,319.214539106753 L360,360  Z"
+                          />
+                        </clipPath>
+                        <path
+                          d="M544.9558292797482,155.14067945187202 A276,276 0 0 1 611.5469386126557,246.42122700697627"
+                          id="radar-axis-0-2"
+                        />
+                        <clipPath id="radar-clip-0-3">
+                          <path
+                            d="M566.8150005576708,209.12403920991719 A256,256 0 0 1 588.2106986561555,475.99946990770866 L360,360  Z"
+                          />
+                        </clipPath>
+                        <path
+                          d="M617.7049672253756,261.1862870479604 A276,276 0 0 1 635.7061721311326,372.7321109325319"
+                          id="radar-axis-0-3"
+                        />
+                        <clipPath id="radar-clip-0-4">
+                          <path
+                            d="M612.7301845441605,319.214539106753 A256,256 0 0 1 510.8759607900828,566.8150005576708 L360,360  Z"
+                          />
+                        </clipPath>
+                        <path
+                          d="M575.2312604422727,532.775879475205 A276,276 0 0 0 626.4291672707228,432.0520563719677"
+                          id="radar-axis-0-4"
+                        />
+                        <clipPath id="radar-clip-0-5">
+                          <path
+                            d="M588.2106986561555,475.99946990770866 A256,256 0 0 1 400.78546089324703,612.7301845441605 L360,360  Z"
+                          />
+                        </clipPath>
+                        <path
+                          d="M473.57877299302373,611.5469386126557 A276,276 0 0 0 564.859320548128,544.9558292797482"
+                          id="radar-axis-0-5"
+                        />
+                        <clipPath id="radar-clip-0-6">
+                          <path
+                            d="M510.8759607900828,566.8150005576708 A256,256 0 0 1 244.0005300922914,588.2106986561555 L360,360  Z"
+                          />
+                        </clipPath>
+                        <path
+                          d="M347.26788906746816,635.7061721311326 A276,276 0 0 0 458.81371295203974,617.7049672253756"
+                          id="radar-axis-0-6"
+                        />
+                        <clipPath id="radar-clip-0-7">
+                          <path
+                            d="M400.78546089324703,612.7301845441605 A256,256 0 0 1 153.18499944232917,510.87596079008284 L360,360  Z"
+                          />
+                        </clipPath>
+                        <path
+                          d="M187.22412052479504,575.2312604422727 A276,276 0 0 0 287.9479436280324,626.4291672707228"
+                          id="radar-axis-0-7"
+                        />
+                        <clipPath id="radar-clip-0-8">
+                          <path
+                            d="M244.0005300922914,588.2106986561555 A256,256 0 0 1 104,360.00000000000006 L360,360  Z"
+                          />
+                        </clipPath>
+                        <path
+                          d="M108.45306138734432,473.5787729930238 A276,276 0 0 0 175.04417072025186,564.8593205481279"
+                          id="radar-axis-0-8"
+                        />
+                        <clipPath id="radar-clip-0-9">
+                          <path
+                            d="M153.18499944232917,510.87596079008284 A256,256 0 0 1 131.78930134384453,244.0005300922914 L360,360  Z"
+                          />
+                        </clipPath>
+                        <path
+                          d="M89.84380175727364,416.49450018397124 A276,276 0 0 1 89.84380175727364,303.5054998160289"
+                          id="radar-axis-0-9"
+                        />
+                        <clipPath id="radar-clip-0-10">
+                          <path
+                            d="M104,360.00000000000006 A256,256 0 0 1 209.12403920991716,153.18499944232917 L360,360  Z"
+                          />
+                        </clipPath>
+                        <path
+                          d="M93.57083272927719,287.9479436280323 A276,276 0 0 1 144.76873955772723,187.22412052479504"
+                          id="radar-axis-0-10"
+                        />
+                        <clipPath id="radar-clip-0-11">
+                          <path
+                            d="M131.78930134384453,244.0005300922914 A256,256 0 0 1 359.99999999999994,104 L360,360  Z"
+                          />
+                        </clipPath>
+                        <path
+                          d="M155.140679451872,175.04417072025186 A276,276 0 0 1 246.42122700697615,108.45306138734432"
+                          id="radar-axis-0-11"
+                        />
+                      </defs>
+                      <circle class="radar-grid" r="28.33876415838455" cy="360" cx="360" />
+                      <text class="radar-tick" y="343.66123584161545" x="365">25</text>
+                      <circle class="radar-grid" r="66.46715148947357" cy="360" cx="360" />
+                      <text class="radar-tick" y="305.53284851052643" x="365">50</text>
+                      <circle class="radar-grid" r="124.95785958940817" cy="360" cx="360" />
+                      <text class="radar-tick" y="247.04214041059183" x="365">75</text>
+                      <circle class="radar-grid" r="184.63907815607575" cy="360" cx="360" />
+                      <text class="radar-tick" y="187.36092184392425" x="365">90</text>
+                      <circle class="radar-grid" r="256" cy="360" cx="360" />
+                      <text class="radar-tick" y="116" x="365">100</text>
+                      <path
+                        class="radar-group-band"
+                        d="M291.0402712268574,72.14490484354008 A296,296 0 0 1 655.1649439138864,382.2183681739293"
+                      />
+                      <text dominant-baseline="central" text-anchor="middle" class="radar-group-label">
+                        <textPath
+                          data-compact-caption="3D tracking · APD (All) ↑"
+                          data-caption="3D tracking · APD (All) ↑"
+                          startOffset="50%"
+                          href="#radar-label-0-0"
+                        >
+                          3D tracking · APD (All) ↑
+                        </textPath>
+                      </text>
+                      <path
+                        class="radar-group-band"
+                        d="M647.8550951564599,428.9597287731426 A296,296 0 0 1 337.78163182607074,655.1649439138864"
+                      />
+                      <text dominant-baseline="central" text-anchor="middle" class="radar-group-label">
+                        <textPath
+                          data-compact-caption="Camera pose · ATE ↓"
+                          data-caption="Camera pose · ATE ↓"
+                          startOffset="50%"
+                          href="#radar-label-0-4"
+                        >
+                          Camera pose · ATE ↓
+                        </textPath>
+                      </text>
+                      <path
+                        class="radar-group-band"
+                        d="M291.04027122685744,647.85509515646 A296,296 0 0 1 86.80813671959737,473.9394832241301"
+                      />
+                      <text dominant-baseline="central" text-anchor="middle" class="radar-group-label">
+                        <textPath
+                          data-compact-caption="3D recon. · Chamfer ↓"
+                          data-caption="3D reconstruction · Chamfer ↓"
+                          startOffset="50%"
+                          href="#radar-label-0-7"
+                        >
+                          3D reconstruction · Chamfer ↓
+                        </textPath>
+                      </text>
+                      <path
+                        class="radar-group-band"
+                        d="M72.14490484354008,428.9597287731427 A296,296 0 0 1 246.06051677586993,86.80813671959737"
+                      />
+                      <text dominant-baseline="central" text-anchor="middle" class="radar-group-label">
+                        <textPath
+                          data-compact-caption="Video depth · δ₁ ↑"
+                          data-caption="Video depth · δ₁ ↑"
+                          startOffset="50%"
+                          href="#radar-label-0-9"
+                        >
+                          Video depth · δ₁ ↑
+                        </textPath>
+                      </text>
+                      <line class="radar-spoke" y2="104" x2="360" y1="360" x1="360" />
+                      <line class="radar-spoke" y2="131.78930134384453" x2="475.99946990770866" y1="360" x1="360" />
+                      <line class="radar-spoke" y2="209.12403920991719" x2="566.8150005576708" y1="360" x1="360" />
+                      <line class="radar-spoke" y2="319.214539106753" x2="612.7301845441605" y1="360" x1="360" />
+                      <line class="radar-spoke" y2="475.99946990770866" x2="588.2106986561555" y1="360" x1="360" />
+                      <line class="radar-spoke" y2="566.8150005576708" x2="510.8759607900828" y1="360" x1="360" />
+                      <line class="radar-spoke" y2="612.7301845441605" x2="400.78546089324703" y1="360" x1="360" />
+                      <line class="radar-spoke" y2="588.2106986561555" x2="244.0005300922914" y1="360" x1="360" />
+                      <line class="radar-spoke" y2="510.87596079008284" x2="153.18499944232917" y1="360" x1="360" />
+                      <line class="radar-spoke" y2="360.00000000000006" x2="104" y1="360" x1="360" />
+                      <line class="radar-spoke" y2="244.0005300922914" x2="131.78930134384453" y1="360" x1="360" />
+                      <line class="radar-spoke" y2="153.18499944232917" x2="209.12403920991716" y1="360" x1="360" />
+                      <g
+                        data-method="6"
+                        style="--series-color: light-dark(#8c7019, #d7b95e); stroke-dasharray:"
+                        class="radar-series radar-method-6"
+                      >
+                        <path
+                          class="radar-shape is-complete"
+                          d="M360,229.10216243348833 L437.04159933137413,208.43277971021044 L472.3335855700874,278.0502497102196 L553.7474805580553,328.73313606873523 L388.8100205455493,374.6441298808222 L377.72289521488455,384.2938673898461 L360.74626138373355,364.6242649487966 L356.98684890763536,365.92790050240905 L342.9440652965952,372.4426687068646 L134.7952208800094,360 L209.07770693087693,283.2862170951427 L215.7933092588463,162.32697992527434 Z"
+                        />
+                      </g>
+                      <g
+                        data-method="5"
+                        style="--series-color: light-dark(#ac397a, #ed8ec2); stroke-dasharray: 5 3 1 3"
+                        class="radar-series radar-method-5"
+                      >
+                        <path
+                          class="radar-shape is-complete"
+                          d="M360,168.6609727635884 L438.7095126498318,205.15142278671772 L530.0602082592039,235.93744532996686 L541.8330312543355,330.65588347232654 L455.3248560978561,408.45361256721986 L396.79502424392626,410.43721292429586 L366.30360391202925,399.0607570710136 L314.3127985891108,449.88237758257765 L280.83512477058105,417.7524675621147 L106.00932072623903,360.00000000000006 L162.71698457412558,259.7210676539048 L211.01127806310257,155.7719543318297 Z"
+                        />
+                      </g>
+                      <g
+                        data-method="2"
+                        style="--series-color: light-dark(#7342a4, #b396e5); stroke-dasharray: 2 4"
+                        class="radar-series radar-method-2"
+                      >
+                        <path
+                          class="radar-shape is-complete"
+                          d="M360,180.87931654821267 L460.24453156566835,162.7846626949117 L548.7536944807268,222.30014781004175 L498.0136232665404,337.72743590313314 L588.2106986561555,475.99946990770866 L396.49006993193075,410.01919320879483 L370.7335005637271,426.5109457847208 L309.51690716093765,459.3175390912746 L251.03075464663723,439.49539223425097 L107.98297114688611,360.00000000000006 L155.8421505875972,256.22659038865464 L221.31831612520511,169.90044817139827 Z"
+                        />
+                      </g>
+                      <g
+                        data-method="1"
+                        style="--series-color: light-dark(#007f89, #5dc5ca); stroke-dasharray: 8 4"
+                        class="radar-series radar-method-1"
+                      >
+                        <path
+                          class="radar-shape is-complete"
+                          d="M360,127.96194635671245 L445.6272846468231,191.54179524416594 L519.4414592105195,243.68404959362755 L542.5599614304564,330.538571872512 L560.5872329715135,461.9584657159631 L442.5950817573123,473.21818128115086 L390.13529194490854,546.7356093992288 L277.61802228808716,522.0735741746876 L153.18499944232917,510.87596079008284 L107.00052539588617,360.00000000000006 L171.60482895000365,264.2387578511442 L236.81689052423724,191.1453016006241 Z"
+                        />
+                      </g>
+                      <g
+                        data-method="0"
+                        style="--series-color: var(--radar-arrow); stroke-dasharray:"
+                        class="radar-series radar-method-0"
+                      >
+                        <path
+                          class="radar-shape is-complete"
+                          d="M360,104 L475.99946990770866,131.78930134384453 L566.8150005576708,209.12403920991719 L612.7301845441605,319.214539106753 L560.5872329715135,461.9584657159631 L510.8759607900828,566.8150005576708 L400.78546089324703,612.7301845441605 L244.0005300922914,588.2106986561555 L162.6298897372076,503.9857115627336 L104,360.00000000000006 L131.78930134384453,244.0005300922914 L209.12403920991716,153.18499944232917 Z"
+                        />
+                      </g>
+                      <g
+                        data-method="6"
+                        style="--series-color: light-dark(#8c7019, #d7b95e)"
+                        class="radar-series radar-method-6"
+                      >
+                        <circle class="radar-point" r="4" cy="229.10216243348833" cx="360" />
+                        <circle class="radar-point" r="4" cy="208.43277971021044" cx="437.04159933137413" />
+                        <circle class="radar-point" r="4" cy="278.0502497102196" cx="472.3335855700874" />
+                        <circle class="radar-point" r="4" cy="328.73313606873523" cx="553.7474805580553" />
+                        <circle class="radar-point" r="4" cy="374.6441298808222" cx="388.8100205455493" />
+                        <circle class="radar-point" r="4" cy="384.2938673898461" cx="377.72289521488455" />
+                        <circle class="radar-point" r="4" cy="364.6242649487966" cx="360.74626138373355" />
+                        <circle class="radar-point" r="4" cy="365.92790050240905" cx="356.98684890763536" />
+                        <circle class="radar-point" r="4" cy="372.4426687068646" cx="342.9440652965952" />
+                        <circle class="radar-point" r="4" cy="360" cx="134.7952208800094" />
+                        <circle class="radar-point" r="4" cy="283.2862170951427" cx="209.07770693087693" />
+                        <circle class="radar-point" r="4" cy="162.32697992527434" cx="215.7933092588463" />
+                      </g>
+                      <g
+                        data-method="5"
+                        style="--series-color: light-dark(#ac397a, #ed8ec2)"
+                        class="radar-series radar-method-5"
+                      >
+                        <circle class="radar-point" r="4" cy="168.6609727635884" cx="360" />
+                        <circle class="radar-point" r="4" cy="205.15142278671772" cx="438.7095126498318" />
+                        <circle class="radar-point" r="4" cy="235.93744532996686" cx="530.0602082592039" />
+                        <circle class="radar-point" r="4" cy="330.65588347232654" cx="541.8330312543355" />
+                        <circle class="radar-point" r="4" cy="408.45361256721986" cx="455.3248560978561" />
+                        <circle class="radar-point" r="4" cy="410.43721292429586" cx="396.79502424392626" />
+                        <circle class="radar-point" r="4" cy="399.0607570710136" cx="366.30360391202925" />
+                        <circle class="radar-point" r="4" cy="449.88237758257765" cx="314.3127985891108" />
+                        <circle class="radar-point" r="4" cy="417.7524675621147" cx="280.83512477058105" />
+                        <circle class="radar-point" r="4" cy="360.00000000000006" cx="106.00932072623903" />
+                        <circle class="radar-point" r="4" cy="259.7210676539048" cx="162.71698457412558" />
+                        <circle class="radar-point" r="4" cy="155.7719543318297" cx="211.01127806310257" />
+                      </g>
+                      <g
+                        data-method="2"
+                        style="--series-color: light-dark(#7342a4, #b396e5)"
+                        class="radar-series radar-method-2"
+                      >
+                        <circle class="radar-point" r="4" cy="180.87931654821267" cx="360" />
+                        <circle class="radar-point" r="4" cy="162.7846626949117" cx="460.24453156566835" />
+                        <circle class="radar-point" r="4" cy="222.30014781004175" cx="548.7536944807268" />
+                        <circle class="radar-point" r="4" cy="337.72743590313314" cx="498.0136232665404" />
+                        <circle class="radar-point" r="4" cy="475.99946990770866" cx="588.2106986561555" />
+                        <circle class="radar-point" r="4" cy="410.01919320879483" cx="396.49006993193075" />
+                        <circle class="radar-point" r="4" cy="426.5109457847208" cx="370.7335005637271" />
+                        <circle class="radar-point" r="4" cy="459.3175390912746" cx="309.51690716093765" />
+                        <circle class="radar-point" r="4" cy="439.49539223425097" cx="251.03075464663723" />
+                        <circle class="radar-point" r="4" cy="360.00000000000006" cx="107.98297114688611" />
+                        <circle class="radar-point" r="4" cy="256.22659038865464" cx="155.8421505875972" />
+                        <circle class="radar-point" r="4" cy="169.90044817139827" cx="221.31831612520511" />
+                      </g>
+                      <g
+                        data-method="1"
+                        style="--series-color: light-dark(#007f89, #5dc5ca)"
+                        class="radar-series radar-method-1"
+                      >
+                        <circle class="radar-point" r="4" cy="127.96194635671245" cx="360" />
+                        <circle class="radar-point" r="4" cy="191.54179524416594" cx="445.6272846468231" />
+                        <circle class="radar-point" r="4" cy="243.68404959362755" cx="519.4414592105195" />
+                        <circle class="radar-point" r="4" cy="330.538571872512" cx="542.5599614304564" />
+                        <circle class="radar-point" r="4" cy="461.9584657159631" cx="560.5872329715135" />
+                        <circle class="radar-point" r="4" cy="473.21818128115086" cx="442.5950817573123" />
+                        <circle class="radar-point" r="4" cy="546.7356093992288" cx="390.13529194490854" />
+                        <circle class="radar-point" r="4" cy="522.0735741746876" cx="277.61802228808716" />
+                        <circle class="radar-point" r="4" cy="510.87596079008284" cx="153.18499944232917" />
+                        <circle class="radar-point" r="4" cy="360.00000000000006" cx="107.00052539588617" />
+                        <circle class="radar-point" r="4" cy="264.2387578511442" cx="171.60482895000365" />
+                        <circle class="radar-point" r="4" cy="191.1453016006241" cx="236.81689052423724" />
+                      </g>
+                      <g data-method="0" style="--series-color: var(--radar-arrow)" class="radar-series radar-method-0">
+                        <circle class="radar-point" r="4" cy="104" cx="360" />
+                        <circle class="radar-point" r="4" cy="131.78930134384453" cx="475.99946990770866" />
+                        <circle class="radar-point" r="4" cy="209.12403920991719" cx="566.8150005576708" />
+                        <circle class="radar-point" r="4" cy="319.214539106753" cx="612.7301845441605" />
+                        <circle class="radar-point" r="4" cy="461.9584657159631" cx="560.5872329715135" />
+                        <circle class="radar-point" r="4" cy="566.8150005576708" cx="510.8759607900828" />
+                        <circle class="radar-point" r="4" cy="612.7301845441605" cx="400.78546089324703" />
+                        <circle class="radar-point" r="4" cy="588.2106986561555" cx="244.0005300922914" />
+                        <circle class="radar-point" r="4" cy="503.9857115627336" cx="162.6298897372076" />
+                        <circle class="radar-point" r="4" cy="360.00000000000006" cx="104" />
+                        <circle class="radar-point" r="4" cy="244.0005300922914" cx="131.78930134384453" />
+                        <circle class="radar-point" r="4" cy="153.18499944232917" cx="209.12403920991716" />
+                      </g>
+                      <g
+                        aria-label="3D tracking · APD (All) ↑, APD (All). ARROW: 93.55%; OmniX: 91.05%; 4RC: 83.19%; V-DPM: 85.35%; OpenD4RT: 71.92%"
+                        role="button"
+                        tabindex="0"
+                        class="radar-hit"
+                      >
+                        <path
+                          class="radar-hit-area"
+                          d="M291.0402712268574,72.14490484354008 A296,296 0 0 1 428.9597287731426,72.14490484354008 L360,360  Z"
+                        />
+                        <line
+                          clip-path="url(#radar-clip-0-0)"
+                          class="radar-highlight-spoke"
+                          y2="84"
+                          x2="360"
+                          y1="360"
+                          x1="360"
+                        />
+                        <path
+                          class="radar-highlight-label"
+                          d="M291.0402712268574,72.14490484354008 A296,296 0 0 1 428.9597287731426,72.14490484354008 L419.64084650650176,111.04424202684547 L419.64084650650176,111.04424202684547 A256,256 0 0 0 300.3591534934983,111.04424202684547 Z"
+                        />
+                        <text dominant-baseline="central" text-anchor="middle" class="radar-metric-label">
+                          <textPath
+                            data-compact-caption="ADT"
+                            data-caption="Aria Digital Twin"
+                            startOffset="50%"
+                            href="#radar-axis-0-0"
+                          >
+                            Aria Digital Twin
+                          </textPath>
+                        </text>
+                      </g>
+                      <g
+                        aria-label="3D tracking · APD (All) ↑, APD (All). ARROW: 88.00%; OmniX: 79.91%; 4RC: 84.41%; V-DPM: 77.28%; OpenD4RT: 76.59%"
+                        role="button"
+                        tabindex="0"
+                        class="radar-hit"
+                      >
+                        <path
+                          class="radar-hit-area"
+                          d="M428.9597287731426,72.14490484354008 A296,296 0 0 1 551.9077591048447,134.63937345810183 L360,360  Z"
+                        />
+                        <line
+                          clip-path="url(#radar-clip-0-1)"
+                          class="radar-highlight-spoke"
+                          y2="113.96034051133239"
+                          x2="485.0619284942484"
+                          y1="360"
+                          x1="360"
+                        />
+                        <path
+                          class="radar-highlight-label"
+                          d="M428.9597287731426,72.14490484354008 A296,296 0 0 1 551.9077591048447,134.63937345810183 L525.9742781447305,165.09351217997997 L525.9742781447305,165.09351217997997 A256,256 0 0 0 419.64084650650176,111.04424202684547 Z"
+                        />
+                        <text dominant-baseline="central" text-anchor="middle" class="radar-metric-label">
+                          <textPath
+                            data-compact-caption="Dyn. Rep."
+                            data-caption="Dynamic Replica"
+                            startOffset="50%"
+                            href="#radar-axis-0-1"
+                          >
+                            Dynamic Replica
+                          </textPath>
+                        </text>
+                      </g>
+                      <g
+                        aria-label="3D tracking · APD (All) ↑, APD (All). ARROW: 85.26%; OmniX: 78.68%; 4RC: 83.15%; V-DPM: 80.47%; OpenD4RT: 67.61%"
+                        role="button"
+                        tabindex="0"
+                        class="radar-hit"
+                      >
+                        <path
+                          class="radar-hit-area"
+                          d="M551.9077591048447,134.63937345810183 A296,296 0 0 1 633.1918632804027,246.06051677587 L360,360  Z"
+                        />
+                        <line
+                          clip-path="url(#radar-clip-0-2)"
+                          class="radar-highlight-spoke"
+                          y2="197.33685477319196"
+                          x2="582.9724224762389"
+                          y1="360"
+                          x1="360"
+                        />
+                        <path
+                          class="radar-highlight-label"
+                          d="M551.9077591048447,134.63937345810183 A296,296 0 0 1 633.1918632804027,246.06051677587 L596.2740439181861,261.4577442385903 L596.2740439181861,261.4577442385903 A256,256 0 0 0 525.9742781447305,165.09351217997997 Z"
+                        />
+                        <text dominant-baseline="central" text-anchor="middle" class="radar-metric-label">
+                          <textPath
+                            data-compact-caption="Pt. Odyssey"
+                            data-caption="PointOdyssey"
+                            startOffset="50%"
+                            href="#radar-axis-0-2"
+                          >
+                            PointOdyssey
+                          </textPath>
+                        </text>
+                      </g>
+                      <g
+                        aria-label="3D tracking · APD (All) ↑, APD (All). ARROW: 85.76%; OmniX: 77.23%; 4RC: 68.19%; V-DPM: 77.11%; OpenD4RT: 78.98%"
+                        role="button"
+                        tabindex="0"
+                        class="radar-hit"
+                      >
+                        <path
+                          class="radar-hit-area"
+                          d="M633.1918632804027,246.06051677587 A296,296 0 0 1 655.1649439138864,382.2183681739293 L360,360  Z"
+                        />
+                        <line
+                          clip-path="url(#radar-clip-0-3)"
+                          class="radar-highlight-spoke"
+                          y2="316.0281749744681"
+                          x2="632.474730211673"
+                          y1="360"
+                          x1="360"
+                        />
+                        <path
+                          class="radar-highlight-label"
+                          d="M633.1918632804027,246.06051677587 A296,296 0 0 1 655.1649439138864,382.2183681739293 L615.2777893309288,379.2158859882632 L615.2777893309288,379.2158859882632 A256,256 0 0 0 596.2740439181861,261.4577442385903 Z"
+                        />
+                        <text dominant-baseline="central" text-anchor="middle" class="radar-metric-label">
+                          <textPath
+                            data-compact-caption="PStudio"
+                            data-caption="Panoptic Studio"
+                            startOffset="50%"
+                            href="#radar-axis-0-3"
+                          >
+                            Panoptic Studio
+                          </textPath>
+                        </text>
+                      </g>
+                      <g
+                        aria-label="Camera pose · ATE ↓, ATE. ARROW: 0.0084 m; OmniX: 0.0084 m; 4RC: 0.0081 m; V-DPM: 0.0118 m; OpenD4RT: 0.0289 m"
+                        role="button"
+                        tabindex="0"
+                        class="radar-hit"
+                      >
+                        <path
+                          class="radar-hit-area"
+                          d="M647.8550951564599,428.9597287731426 A296,296 0 0 1 585.3606265418982,551.9077591048447 L360,360  Z"
+                        />
+                        <line
+                          clip-path="url(#radar-clip-0-4)"
+                          class="radar-highlight-spoke"
+                          y2="485.0619284942484"
+                          x2="606.0396594886677"
+                          y1="360"
+                          x1="360"
+                        />
+                        <path
+                          class="radar-highlight-label"
+                          d="M647.8550951564599,428.9597287731426 A296,296 0 0 1 585.3606265418982,551.9077591048447 L554.9064878200201,525.9742781447305 L554.9064878200201,525.9742781447305 A256,256 0 0 0 608.9557579731545,419.6408465065017 Z"
+                        />
+                        <text dominant-baseline="central" text-anchor="middle" class="radar-metric-label">
+                          <textPath
+                            data-compact-caption="Bonn"
+                            data-caption="Bonn"
+                            startOffset="50%"
+                            href="#radar-axis-0-4"
+                          >
+                            Bonn
+                          </textPath>
+                        </text>
+                      </g>
+                      <g
+                        aria-label="Camera pose · ATE ↓, ATE. ARROW: 0.0613 m; OmniX: 0.0770 m; 4RC: 0.1292 m; V-DPM: 0.1284 m; OpenD4RT: 0.2328 m"
+                        role="button"
+                        tabindex="0"
+                        class="radar-hit"
+                      >
+                        <path
+                          class="radar-hit-area"
+                          d="M585.3606265418982,551.9077591048447 A296,296 0 0 1 473.93948322413,633.1918632804027 L360,360  Z"
+                        />
+                        <line
+                          clip-path="url(#radar-clip-0-5)"
+                          class="radar-highlight-spoke"
+                          y2="582.9724224762389"
+                          x2="522.6631452268081"
+                          y1="360"
+                          x1="360"
+                        />
+                        <path
+                          class="radar-highlight-label"
+                          d="M585.3606265418982,551.9077591048447 A296,296 0 0 1 473.93948322413,633.1918632804027 L458.54225576140976,596.2740439181861 L458.54225576140976,596.2740439181861 A256,256 0 0 0 554.9064878200201,525.9742781447305 Z"
+                        />
+                        <text dominant-baseline="central" text-anchor="middle" class="radar-metric-label">
+                          <textPath
+                            data-compact-caption="Sintel"
+                            data-caption="Sintel"
+                            startOffset="50%"
+                            href="#radar-axis-0-5"
+                          >
+                            Sintel
+                          </textPath>
+                        </text>
+                      </g>
+                      <g
+                        aria-label="Camera pose · ATE ↓, ATE. ARROW: 0.0714 m; OmniX: 0.0786 m; 4RC: 0.1414 m; V-DPM: 0.2146 m; OpenD4RT: 1.5576 m"
+                        role="button"
+                        tabindex="0"
+                        class="radar-hit"
+                      >
+                        <path
+                          class="radar-hit-area"
+                          d="M473.93948322413,633.1918632804027 A296,296 0 0 1 337.78163182607074,655.1649439138864 L360,360  Z"
+                        />
+                        <line
+                          clip-path="url(#radar-clip-0-6)"
+                          class="radar-highlight-spoke"
+                          y2="632.474730211673"
+                          x2="403.9718250255319"
+                          y1="360"
+                          x1="360"
+                        />
+                        <path
+                          class="radar-highlight-label"
+                          d="M473.93948322413,633.1918632804027 A296,296 0 0 1 337.78163182607074,655.1649439138864 L340.78411401173685,615.2777893309288 L340.78411401173685,615.2777893309288 A256,256 0 0 0 458.54225576140976,596.2740439181861 Z"
+                        />
+                        <text dominant-baseline="central" text-anchor="middle" class="radar-metric-label">
+                          <textPath
+                            data-compact-caption="PStudio"
+                            data-caption="PStudio"
+                            startOffset="50%"
+                            href="#radar-axis-0-6"
+                          >
+                            PStudio
+                          </textPath>
+                        </text>
+                      </g>
+                      <g
+                        aria-label="3D reconstruction · Chamfer ↓, Chamfer. ARROW: 0.0263 m; OmniX: 0.0294 m; 4RC: 0.0374 m; V-DPM: 0.0397 m; OpenD4RT: 0.4077 m"
+                        role="button"
+                        tabindex="0"
+                        class="radar-hit"
+                      >
+                        <path
+                          class="radar-hit-area"
+                          d="M291.04027122685744,647.85509515646 A296,296 0 0 1 168.09224089515533,585.3606265418982 L360,360  Z"
+                        />
+                        <line
+                          clip-path="url(#radar-clip-0-7)"
+                          class="radar-highlight-spoke"
+                          y2="606.0396594886677"
+                          x2="234.93807150575165"
+                          y1="360"
+                          x1="360"
+                        />
+                        <path
+                          class="radar-highlight-label"
+                          d="M291.04027122685744,647.85509515646 A296,296 0 0 1 168.09224089515533,585.3606265418982 L194.02572185526947,554.9064878200201 L194.02572185526947,554.9064878200201 A256,256 0 0 0 300.35915349349835,608.9557579731545 Z"
+                        />
+                        <text dominant-baseline="central" text-anchor="middle" class="radar-metric-label">
+                          <textPath
+                            data-compact-caption="NRGBD"
+                            data-caption="NRGBD"
+                            startOffset="50%"
+                            href="#radar-axis-0-7"
+                          >
+                            NRGBD
+                          </textPath>
+                        </text>
+                      </g>
+                      <g
+                        aria-label="3D reconstruction · Chamfer ↓, Chamfer. ARROW: 0.0487 m; OmniX: 0.0481 m; 4RC: 0.0616 m; V-DPM: 0.0739 m; OpenD4RT: 0.2503 m"
+                        role="button"
+                        tabindex="0"
+                        class="radar-hit"
+                      >
+                        <path
+                          class="radar-hit-area"
+                          d="M168.09224089515533,585.3606265418982 A296,296 0 0 1 86.80813671959737,473.9394832241301 L360,360  Z"
+                        />
+                        <line
+                          clip-path="url(#radar-clip-0-8)"
+                          class="radar-highlight-spoke"
+                          y2="522.6631452268081"
+                          x2="137.02757752376112"
+                          y1="360"
+                          x1="360"
+                        />
+                        <path
+                          class="radar-highlight-label"
+                          d="M168.09224089515533,585.3606265418982 A296,296 0 0 1 86.80813671959737,473.9394832241301 L123.72595608181396,458.54225576140976 L123.72595608181396,458.54225576140976 A256,256 0 0 0 194.02572185526947,554.9064878200201 Z"
+                        />
+                        <text dominant-baseline="central" text-anchor="middle" class="radar-metric-label">
+                          <textPath
+                            data-compact-caption="7-Scenes"
+                            data-caption="7-Scenes"
+                            startOffset="50%"
+                            href="#radar-axis-0-8"
+                          >
+                            7-Scenes
+                          </textPath>
+                        </text>
+                      </g>
+                      <g
+                        aria-label="Video depth · δ₁ ↑, δ₁. ARROW: 98.7%; OmniX: 98.4%; 4RC: 98.3%; V-DPM: 98.5%; OpenD4RT: 95.2%"
+                        role="button"
+                        tabindex="0"
+                        class="radar-hit"
+                      >
+                        <path
+                          class="radar-hit-area"
+                          d="M72.14490484354008,428.9597287731427 A296,296 0 0 1 72.14490484354002,291.0402712268574 L360,360  Z"
+                        />
+                        <line
+                          clip-path="url(#radar-clip-0-9)"
+                          class="radar-highlight-spoke"
+                          y2="360.00000000000006"
+                          x2="84"
+                          y1="360"
+                          x1="360"
+                        />
+                        <path
+                          class="radar-highlight-label"
+                          d="M72.14490484354008,428.9597287731427 A296,296 0 0 1 72.14490484354002,291.0402712268574 L111.04424202684544,300.3591534934983 L111.04424202684544,300.3591534934983 A256,256 0 0 0 111.04424202684547,419.64084650650176 Z"
+                        />
+                        <text dominant-baseline="central" text-anchor="middle" class="radar-metric-label">
+                          <textPath
+                            data-compact-caption="Bonn"
+                            data-caption="Bonn"
+                            startOffset="50%"
+                            href="#radar-axis-0-9"
+                          >
+                            Bonn
+                          </textPath>
+                        </text>
+                      </g>
+                      <g
+                        aria-label="Video depth · δ₁ ↑, δ₁. ARROW: 98.3%; OmniX: 92.9%; 4RC: 95.3%; V-DPM: 94.3%; OpenD4RT: 85.4%"
+                        role="button"
+                        tabindex="0"
+                        class="radar-hit"
+                      >
+                        <path
+                          class="radar-hit-area"
+                          d="M72.14490484354002,291.0402712268574 A296,296 0 0 1 134.6393734581018,168.09224089515533 L360,360  Z"
+                        />
+                        <line
+                          clip-path="url(#radar-clip-0-10)"
+                          class="radar-highlight-spoke"
+                          y2="234.93807150575168"
+                          x2="113.96034051133239"
+                          y1="360"
+                          x1="360"
+                        />
+                        <path
+                          class="radar-highlight-label"
+                          d="M72.14490484354002,291.0402712268574 A296,296 0 0 1 134.6393734581018,168.09224089515533 L165.09351217997994,194.02572185526947 L165.09351217997994,194.02572185526947 A256,256 0 0 0 111.04424202684544,300.3591534934983 Z"
+                        />
+                        <text dominant-baseline="central" text-anchor="middle" class="radar-metric-label">
+                          <textPath
+                            data-compact-caption="KITTI"
+                            data-caption="KITTI"
+                            startOffset="50%"
+                            href="#radar-axis-0-10"
+                          >
+                            KITTI
+                          </textPath>
+                        </text>
+                      </g>
+                      <g
+                        aria-label="Video depth · δ₁ ↑, δ₁. ARROW: 92.4%; OmniX: 87.0%; 4RC: 90.3%; V-DPM: 92.1%; OpenD4RT: 91.3%"
+                        role="button"
+                        tabindex="0"
+                        class="radar-hit"
+                      >
+                        <path
+                          class="radar-hit-area"
+                          d="M134.6393734581018,168.09224089515533 A296,296 0 0 1 246.06051677586993,86.80813671959737 L360,360  Z"
+                        />
+                        <line
+                          clip-path="url(#radar-clip-0-11)"
+                          class="radar-highlight-spoke"
+                          y2="137.02757752376112"
+                          x2="197.33685477319193"
+                          y1="360"
+                          x1="360"
+                        />
+                        <path
+                          class="radar-highlight-label"
+                          d="M134.6393734581018,168.09224089515533 A296,296 0 0 1 246.06051677586993,86.80813671959737 L261.45774423859024,123.72595608181396 L261.45774423859024,123.72595608181396 A256,256 0 0 0 165.09351217997994,194.02572185526947 Z"
+                        />
+                        <text dominant-baseline="central" text-anchor="middle" class="radar-metric-label">
+                          <textPath
+                            data-compact-caption="7-Scenes"
+                            data-caption="7-Scenes"
+                            startOffset="50%"
+                            href="#radar-axis-0-11"
+                          >
+                            7-Scenes
+                          </textPath>
+                        </text>
+                      </g>
+                    </svg>
+                  </div>
+                </div>
+                <div class="radar-tooltip" data-radar-tooltip="" hidden role="tooltip"></div>
+              </div>
+              <p class="result-card-source">
+                One metric per task and dataset (APD All, ATE, Chamfer and δ₁). Each spoke is normalized to the best
+                displayed method: score / best for ↑, best / error for ↓. A reversed-log scale highlights differences
+                near the best score; missing values remain gaps. Source: paper evaluation tables.
+              </p>
+              <noscript>
+                <p class="result-card-lead">Enable JavaScript to explore the radar charts.</p>
+              </noscript>
+            </article>
+            <article class="result-card" data-results-task="3D tracking" aria-labelledby="worldtrack-summary-heading">
+              <div class="result-card-head">
+                <div>
+                  <span class="result-card-kicker">WorldTrack · APD (All) ↑</span>
+                  <h3 id="worldtrack-summary-heading">3D tracking across four datasets</h3>
+                </div>
+                <span class="result-card-badge">+4.38 pp</span>
+              </div>
+              <p class="result-card-lead">
+                Average percentage of points within distance thresholds (APD), across all tracks. Higher is better.
+              </p>
+              <div class="result-pager" data-results-pager>
+                <button
+                  class="result-pager-button"
+                  type="button"
+                  data-results-prev
+                  disabled
+                  aria-label="Previous WorldTrack dataset"
+                >
+                  <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                </button>
+                <div class="result-pager-status" aria-live="polite">
+                  <strong data-results-label>Four-dataset mean</strong><span data-results-count>1 / 5</span>
+                </div>
+                <button
+                  class="result-pager-button"
+                  type="button"
+                  data-results-next
+                  disabled
+                  aria-label="Next WorldTrack dataset"
+                >
+                  <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div class="ranking-window">
+                <div class="ranking-pages" data-ranking-pages>
+                  <div class="ranking-page is-visible" data-prerendered aria-hidden="false">
+                    <div class="ranking-row" style="--bar-width: 100%">
+                      <div class="ranking-label"><strong>ARROW</strong><strong>88.14%</strong></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar ranking-bar-arrow is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 75.95873611311504%">
+                      <div class="ranking-label"><span>UniQuery4R</span><span>83.76%</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 68.29678257105758%">
+                      <div class="ranking-label"><span>SM4RT</span><span>82.36%</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 64.77420285673065%">
+                      <div class="ranking-label"><span>OmniX</span><span>81.72%</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 55.64564997835809%">
+                      <div class="ranking-label"><span>V-DPM</span><span>80.05%</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 53.90491992497476%">
+                      <div class="ranking-label"><span>4RC</span><span>79.73%</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 31.275429230991218%">
+                      <div class="ranking-label"><span>SpatialTracker-V2</span><span>75.61%</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 21.228538450440094%">
+                      <div class="ranking-label"><span>OpenD4RT</span><span>73.78%</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 7.96061174433707%">
+                      <div class="ranking-label"><span>St4RTrack</span><span>71.36%</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 5%">
+                      <div class="ranking-label"><span>Point4D</span><span>70.81%</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p class="result-card-source">
+                The mean weights all four datasets equally; ARROW also has 21% lower mean EPE than UniQuery4R. Full
+                results: Table 1 in the paper.
+              </p>
+            </article>
+            <article class="result-card" data-results-task="Video depth" aria-labelledby="video-depth-summary-heading">
+              <div class="result-card-head">
+                <div>
+                  <span class="result-card-kicker">Video depth · <span class="result-metric">δ₁ ↑</span></span>
+                  <h3 id="video-depth-summary-heading">Video depth across three datasets</h3>
+                </div>
+                <span class="result-card-badge">+0.6 pp</span>
+              </div>
+              <p class="result-card-lead">Fraction of pixels within a 1.25× depth error threshold. Higher is better.</p>
+              <div class="result-pager" data-results-pager>
+                <button
+                  class="result-pager-button"
+                  type="button"
+                  data-results-prev
+                  disabled
+                  aria-label="Previous video-depth dataset"
+                >
+                  <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                </button>
+                <div class="result-pager-status" aria-live="polite">
+                  <strong data-results-label>Three-dataset mean</strong><span data-results-count>1 / 4</span>
+                </div>
+                <button
+                  class="result-pager-button"
+                  type="button"
+                  data-results-next
+                  disabled
+                  aria-label="Next video-depth dataset"
+                >
+                  <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div class="ranking-window">
+                <div class="ranking-pages" data-ranking-pages>
+                  <div class="ranking-page is-visible" data-prerendered aria-hidden="false">
+                    <div class="ranking-row" style="--bar-width: 100%">
+                      <div class="ranking-label"><strong>ARROW</strong><strong>96.5%</strong></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar ranking-bar-arrow is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 90.77142857142908%">
+                      <div class="ranking-label"><span>DA3</span><span>95.9%</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 81.54285714285726%">
+                      <div class="ranking-label"><span>SM4RT</span><span>95.3%</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 75.57142857142901%">
+                      <div class="ranking-label"><span>V-DPM</span><span>95.0%</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 75.02857142857144%">
+                      <div class="ranking-label"><span>Pi3</span><span>94.9%</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 70.1428571428572%">
+                      <div class="ranking-label"><span>4RC</span><span>94.6%</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 67.97142857142875%">
+                      <div class="ranking-label"><span>VGGT-Ω</span><span>94.5%</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 66.34285714285718%">
+                      <div class="ranking-label"><span>VGGT</span><span>94.4%</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 39.74285714285728%">
+                      <div class="ranking-label"><span>OmniX</span><span>92.8%</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 5%">
+                      <div class="ranking-label"><span>OpenD4RT</span><span>90.6%</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p class="result-card-source">
+                Values from the video-depth evaluation table. All reported baselines are shown.
+              </p>
+            </article>
+            <article
+              class="result-card"
+              data-results-task="3D reconstruction"
+              aria-labelledby="reconstruction-summary-heading"
+            >
+              <div class="result-card-head">
+                <div>
+                  <span class="result-card-kicker">3D reconstruction · Chamfer ↓</span>
+                  <h3 id="reconstruction-summary-heading">Reconstruction quality across datasets</h3>
+                </div>
+                <span class="result-card-badge">2.0% lower</span>
+              </div>
+              <p class="result-card-lead">Mean bidirectional Chamfer distance in metres. Lower is better.</p>
+              <div class="result-pager" data-results-pager>
+                <button
+                  class="result-pager-button"
+                  type="button"
+                  data-results-prev
+                  disabled
+                  aria-label="Previous reconstruction dataset"
+                >
+                  <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                </button>
+                <div class="result-pager-status" aria-live="polite">
+                  <strong data-results-label>Two-dataset mean</strong><span data-results-count>1 / 3</span>
+                </div>
+                <button
+                  class="result-pager-button"
+                  type="button"
+                  data-results-next
+                  disabled
+                  aria-label="Next reconstruction dataset"
+                >
+                  <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div class="ranking-window">
+                <div class="ranking-pages" data-ranking-pages>
+                  <div class="ranking-page is-visible" data-prerendered aria-hidden="false">
+                    <div class="ranking-row" style="--bar-width: 100%">
+                      <div class="ranking-label"><strong>ARROW</strong><strong>0.0375 m</strong></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar ranking-bar-arrow is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 98.0392156862745%">
+                      <div class="ranking-label"><span>VGGT-Ω</span><span>0.0382 m</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 96.77419354838709%">
+                      <div class="ranking-label"><span>OmniX</span><span>0.0387 m</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 84.7457627118644%">
+                      <div class="ranking-label"><span>DA3</span><span>0.0442 m</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 77.55946225439503%">
+                      <div class="ranking-label"><span>VGGT</span><span>0.0484 m</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 75.75757575757575%">
+                      <div class="ranking-label"><span>4RC</span><span>0.0495 m</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 73.45739471106758%">
+                      <div class="ranking-label"><span>Pi3</span><span>0.0510 m</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 66.02112676056339%">
+                      <div class="ranking-label"><span>V-DPM</span><span>0.0568 m</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 39.20543648719289%">
+                      <div class="ranking-label"><span>SM4RT</span><span>0.0956 m</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 11.398176291793312%">
+                      <div class="ranking-label"><span>OpenD4RT</span><span>0.3290 m</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p class="result-card-source">
+                Values from the 3D reconstruction evaluation table. All reported baselines are shown.
+              </p>
+            </article>
+            <article class="result-card" data-results-task="Camera pose" aria-labelledby="camera-pose-summary-heading">
+              <div class="result-card-head">
+                <div>
+                  <span class="result-card-kicker">Camera pose · ATE ↓</span>
+                  <h3 id="camera-pose-summary-heading">Camera pose across three datasets</h3>
+                </div>
+                <span class="result-card-badge">14.0% lower</span>
+              </div>
+              <p class="result-card-lead">Absolute trajectory error after similarity alignment. Lower is better.</p>
+              <div class="result-pager" data-results-pager>
+                <button
+                  class="result-pager-button"
+                  type="button"
+                  data-results-prev
+                  disabled
+                  aria-label="Previous camera-pose dataset"
+                >
+                  <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                </button>
+                <div class="result-pager-status" aria-live="polite">
+                  <strong data-results-label>Three-dataset mean</strong><span data-results-count>1 / 4</span>
+                </div>
+                <button
+                  class="result-pager-button"
+                  type="button"
+                  data-results-next
+                  disabled
+                  aria-label="Next camera-pose dataset"
+                >
+                  <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div class="ranking-window">
+                <div class="ranking-pages" data-ranking-pages>
+                  <div class="ranking-page is-visible" data-prerendered aria-hidden="false">
+                    <div class="ranking-row" style="--bar-width: 100%">
+                      <div class="ranking-label"><strong>ARROW</strong><strong>0.0470 m</strong></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar ranking-bar-arrow is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 86.03658536585365%">
+                      <div class="ranking-label"><span>OmniX</span><span>0.0547 m</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 59.91507430997878%">
+                      <div class="ranking-label"><span>Pi3</span><span>0.0785 m</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 50.92024539877301%">
+                      <div class="ranking-label"><span>SM4RT</span><span>0.0924 m</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 50.62791532113384%">
+                      <div class="ranking-label"><span>4RC</span><span>0.0929 m</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 40.792136455623016%">
+                      <div class="ranking-label"><span>DA3</span><span>0.1153 m</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 39.76888387824126%">
+                      <div class="ranking-label"><span>V-DPM</span><span>0.1183 m</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 34.81371823340736%">
+                      <div class="ranking-label"><span>VGGT-Ω</span><span>0.1351 m</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 23.063092513893434%">
+                      <div class="ranking-label"><span>VGGT</span><span>0.2039 m</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                    <div class="ranking-row" style="--bar-width: 7.755730225911065%">
+                      <div class="ranking-label"><span>OpenD4RT</span><span>0.6064 m</span></div>
+                      <div class="ranking-track" aria-hidden="true">
+                        <span class="ranking-bar is-enter-pending"></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p class="result-card-source">
+                Values from the camera-pose evaluation table. All reported baselines are shown.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-space section-dark citation-section">
+        <div class="page-shell citation-layout">
+          <div>
+            <p class="eyebrow">Reference</p>
+            <h2>Citation</h2>
+          </div>
+          <div class="citation-box">
+            <div class="citation-toolbar">
+              <span>BibTeX</span>
+              <button class="copy-button" type="button" data-copy-bibtex aria-label="Copy BibTeX citation">
+                <svg
+                  class="copy-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path class="copy-glyph" d="M9 9h11v11H9zM5 15H4V4h11v1" />
+                  <path class="copy-mark" d="m5 12 4 4L19 6" pathLength="1" />
+                </svg>
+                <span>Copy</span>
+              </button>
+              <span class="copy-status" data-copy-status role="status" aria-live="polite"></span>
+            </div>
+            <pre data-bibtex>
+@article{fradlin2026arrow,
+    title         = {{ARROW}: Arbitrary Reconstruction and Tracking of 4D Observations in the Wild},
+    author        = {Fradlin, Ilya and Schmidt, Christian and Piekenbrinck, Jens and Knaebel, Karim and Martin Garcia, Gonzalo and Leibe, Bastian},
+    year          = 2026,
+    journal       = {arXiv preprint arXiv:2610.01314},
+}</pre
+            >
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="page-shell footer-inner">
+        <p>ARROW</p>
+        <p>RWTH Aachen University</p>
+      </div>
+    </footer>
+    <script>
+      (() => {
+        const section = document.querySelector("#overview");
+        const destination = section.querySelector("[data-capabilities-viewer]");
+        const template = document.querySelector("[data-comparison-template]");
+        const copy = template.content.querySelector("[data-arrow-viewer]").cloneNode(true);
+        copy.removeAttribute("data-viewer-manual");
+        copy.querySelector("[data-settings-menu]").id = "capabilities-settings";
+        copy.querySelector("[data-settings-toggle]").setAttribute("aria-controls", "capabilities-settings");
+        destination.append(copy);
+        const scenes = {
+          allpix: ["Judo", "monocular_video"],
+          brandenburg: ["Brandenburg Gate", "static_collection"],
+          "mv-allpix": ["Basketball", "multi_view_video"],
+        };
+        const buttons = [...section.querySelectorAll(".example-chip[data-example]")];
+        const query = new URLSearchParams(location.search);
+        const value = query.get("cap") ?? query.get("capability");
+        const requested = { "pix-track": "allpix", "mv-track": "mv-allpix", static: "brandenburg" }[value] || value;
+        const key = buttons.some((button) => button.dataset.example === requested)
+          ? requested
+          : section.dataset.defaultExample;
+        copy.dataset.example = key;
+        copy.dataset.mode = copy.dataset.inputMode = scenes[key][1];
+        copy.querySelector("[data-viewer-title]").textContent = scenes[key][0];
+        buttons.forEach((button) => {
+          [button.dataset.sceneTitle, button.dataset.sceneMode] = scenes[button.dataset.example];
+          const active = button.dataset.example === key;
+          button.classList.toggle("is-active", active);
+          button.toggleAttribute("aria-current", active);
+        });
+      })();
+    </script>
+  </body>
+</html>

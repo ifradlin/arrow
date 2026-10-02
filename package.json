@@ -1,0 +1,17 @@
+{
+  "name": "arrow-project-page",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  },
+  "devDependencies": {
+    "lightningcss": "1.33.0",
+    "linkedom": "^0.18.13",
+    "rolldown": "1.2.12",
+    "three": "0.169.0"
+  }
+}
