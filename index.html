@@ -24,7 +24,11 @@
       document.documentElement.classList.add("has-js");
       (() => {
         const root = document.documentElement;
-        const update = () => root.classList.toggle("menu-scrolled", window.scrollY > 24);
+        const update = () => {
+          if (!root.classList.contains("viewer-scroll-locked")) {
+            root.classList.toggle("menu-scrolled", window.scrollY > 24);
+          }
+        };
         const restore = () => {
           root.classList.remove("menu-ready");
           update();
@@ -35,6 +39,7 @@
         };
         window.addEventListener("scroll", update, { passive: true });
         window.addEventListener("pageshow", restore);
+        window.addEventListener("viewerscrollrestore", restore);
         window.addEventListener("pagehide", () => root.classList.remove("menu-ready"));
         update();
       })();

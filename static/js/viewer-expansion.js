@@ -1,5 +1,6 @@
 import { blocksViewerMovement } from "./viewer-shortcuts.js";
 let activeViewer = null;
+let scrollLockVersion = 0;
 
 export function installViewerExpansion(viewer) {
   activeViewer ??= viewer;
@@ -58,6 +59,14 @@ export function installViewerExpansion(viewer) {
     restoreScroll();
     style.overflowAnchor = overflowAnchor;
     style.scrollBehavior = scrollBehavior;
+    const version = ++scrollLockVersion;
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        if (version !== scrollLockVersion) return;
+        document.documentElement.classList.remove("viewer-scroll-locked");
+        window.dispatchEvent(new Event("viewerscrollrestore"));
+      }),
+    );
     animateExpansion(false);
   };
   const toggle = () => {
@@ -69,6 +78,8 @@ export function installViewerExpansion(viewer) {
     returnFocus = document.activeElement;
     const height = viewer.getBoundingClientRect().height;
     const style = document.documentElement.style;
+    ++scrollLockVersion;
+    document.documentElement.classList.add("viewer-scroll-locked");
     overflow = style.overflow;
     scrollBehavior = style.scrollBehavior;
     scrollbarGutter = style.scrollbarGutter;
