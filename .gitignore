@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+results/
+frontend/node_modules/
+frontend/*.tsbuildinfo
+dist/
+!.python-version
+tests/
+frontend/scripts/*-test.mjs
+.local/
+/hf

@@ -1,0 +1,72 @@
+[build-system]
+requires = ["uv_build>=0.13,<0.14"]
+build-backend = "uv_build"
+
+[project]
+name = "arrow"
+version = "0.1.0"
+description = "Arbitrary Reconstruction and Tracking of 4D Observations in the Wild"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "Ilya Fradlin", email = "ilya.fradlin@gmail.com" }]
+dependencies = [
+  "torch>=2.10,<2.15",
+  "timm==1.0.29",
+  "numpy>=2.2,<3",
+  "einops>=0.8,<0.9",
+  "safetensors>=0.6,<1",
+  "huggingface-hub>=1,<2",
+  "pillow>=11,<13",
+  "av>=17.1,<18",
+  "cfgx>=0.6.0,<0.7",
+  "specbuild>=0.1,<0.2",
+  "onnxruntime>=1.20,<2",
+]
+
+[project.optional-dependencies]
+viewer = [
+  "fastapi>=0.115,<1",
+  "pydantic>=2,<3",
+  "uvicorn>=0.34,<1",
+  "python-multipart>=0.0.20",
+  "matplotlib>=3.9,<4",
+]
+
+[project.scripts]
+arrow = "arrow.cli:main"
+arrow-viewer = "arrow.viewer.server:main"
+
+[dependency-groups]
+dev = ["pytest>=9,<10", "httpx>=0.28,<1", "ruff>=0.12", "pyright==1.1.414"]
+
+[project.urls]
+Homepage = "https://github.com/ifradlin/arrow"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.uv]
+default-groups = []
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cu130", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+
+[tool.pyright]
+include = ["src", "configs", ".local/scripts", "tests"]
+venvPath = "."
+venv = ".venv"
+typeCheckingMode = "basic"
