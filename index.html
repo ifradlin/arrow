@@ -47,11 +47,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="ARROW unifies 3D reconstruction and point tracking from arbitrary RGB observations through order-invariant querying and training across viewpoints and capture times."
+      content="ARROW for 4D reconstruction and 3D point tracking from arbitrary RGB images and videos. Explore the paper, code, pretrained weights, and interactive results."
     />
+    <link rel="canonical" href="https://ifradlin.github.io/arrow/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ifradlin.github.io/arrow/" />
+    <meta property="og:title" content="ARROW: Arbitrary Reconstruction and Tracking of 4D Observations in the Wild" />
+    <meta
+      property="og:description"
+      content="ARROW for 4D reconstruction and 3D point tracking from arbitrary RGB images and videos. Explore the paper, code, pretrained weights, and interactive results."
+    />
+    <meta
+      property="og:image"
+      content="https://ifradlin.github.io/storage/arrow/assets/images/arrow-architecture-preview.webp"
+    />
+    <meta property="og:image:alt" content="ARROW architecture for reconstruction and tracking from arbitrary observations" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0e" />
     <title>ARROW: Arbitrary Reconstruction and Tracking of 4D Observations in the Wild</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "url": "https://ifradlin.github.io/arrow/",
+        "name": "ARROW: Arbitrary Reconstruction and Tracking of 4D Observations in the Wild",
+        "description": "ARROW for 4D reconstruction and 3D point tracking from arbitrary RGB images and videos. Explore the paper, code, pretrained weights, and interactive results.",
+        "mainEntity": {
+          "@type": "ScholarlyArticle",
+          "name": "ARROW: Arbitrary Reconstruction and Tracking of 4D Observations in the Wild",
+          "url": "https://arxiv.org/abs/2610.01314",
+          "author": [
+            { "@type": "Person", "name": "Ilya Fradlin", "url": "https://ifradlin.github.io/" },
+            { "@type": "Person", "name": "Christian Schmidt", "url": "https://github.com/Schmiddo" },
+            { "@type": "Person", "name": "Jens Piekenbrinck", "url": "https://github.com/jenspiek" },
+            { "@type": "Person", "name": "Karim Knaebel", "url": "https://karimknaebel.com" },
+            { "@type": "Person", "name": "Gonzalo Martin Garcia", "url": "https://gonzalomartingarcia.com/" },
+            {
+              "@type": "Person",
+              "name": "Bastian Leibe",
+              "url": "https://scholar.google.com/citations?user=ZcULDB0AAAAJ"
+            }
+          ]
+        }
+      }
+    </script>
     <link rel="icon" type="image/svg+xml" href="./assets/images/icon.svg" />
     <style>
       html {
@@ -161,6 +201,14 @@
             <a class="button" href="https://huggingface.co/ifradlin/arrow"
               ><i class="fa-solid fa-cube" aria-hidden="true"></i><span>Weights</span></a
             >
+            <a class="button" href="https://huggingface.co/spaces/ifradlin/arrow-4d-reconstruction"
+              ><img
+                src="https://huggingface.co/front/assets/huggingface_logo-noborder.svg"
+                width="18"
+                height="18"
+                alt=""
+              /><span>Demo</span></a
+            >
             <a class="button" href="https://x.com/ifradlin/status/2106076089781203436"
               ><i class="fa-brands fa-x-twitter" aria-hidden="true"></i><span>Tweet</span></a
             >
@@ -172,7 +220,7 @@
         <div class="page-shell">
           <div class="section-heading section-heading-centered">
             <p class="eyebrow">Capabilities</p>
-            <h2>Reconstruction and tracking from any RGB observations</h2>
+            <h2>4D reconstruction and 3D point tracking from any RGB observations</h2>
             <p>
               Photo collections, moving-camera videos, and synchronized camera streams provide complementary evidence of
               geometry and motion. ARROW reconstructs and tracks points across these inputs without requiring a temporal

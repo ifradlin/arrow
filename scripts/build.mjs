@@ -99,6 +99,7 @@ let backup;
 let cleanupBackup = false;
 try {
   await bundleSite(source, staging, { assetBase });
+  await cp(resolve(source, "sitemap.xml"), resolve(staging, "sitemap.xml"));
   if (!values["no-assets"] && !assetBase) await copyAssets(staging);
   await writeFile(resolve(staging, ".nojekyll"), "");
   if (previous) {

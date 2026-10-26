@@ -4,7 +4,13 @@ export function viewerDisabled(search) {
   return new URLSearchParams(search).get("viewer") === "off";
 }
 
-if (typeof window !== "undefined" && !viewerDisabled(window.location.search)) {
+export const viewerAvailable =
+  typeof window !== "undefined" &&
+  !viewerDisabled(window.location.search) &&
+  !/\b(?:Googlebot|Google-InspectionTool)\b/i.test(navigator.userAgent) &&
+  Boolean(document.createElement("canvas").getContext("webgl2"));
+
+if (viewerAvailable) {
   preloadManifests(
     [...document.querySelectorAll(".example-chip[data-manifest]")].map((chip) => chip.dataset.manifest),
     window.location.href,

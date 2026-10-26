@@ -1,6 +1,6 @@
 import "./theme.js";
 import { observeViewport } from "./viewport.js";
-import { viewerDisabled } from "./viewer-bootstrap.js";
+import { viewerAvailable, viewerDisabled } from "./viewer-bootstrap.js";
 import { installViewerExpansion } from "./viewer-expansion.js";
 import { installCapabilitySelection } from "./viewer-selection.js";
 import { installCitationCopy } from "./citation-copy.js";
@@ -25,12 +25,14 @@ document.querySelectorAll(".hero, .result-card").forEach((element) => {
 installCitationCopy();
 
 export function installLoader(loader) {
-  const disabled = viewerDisabled(window.location.search);
+  const disabled = !viewerAvailable;
   if (!disabled && !loader.closest("[data-viewer-manual]")) installCapabilitySelection(loader.closest("section"));
   if (loader && disabled) {
     const viewer = loader.closest("[data-arrow-viewer]");
     viewer.classList.add("is-disabled");
-    loader.querySelector("[data-viewer-loading-text]").textContent = "Interactive viewer disabled (?viewer=off).";
+    loader.querySelector("[data-viewer-loading-text]").textContent = viewerDisabled(window.location.search)
+      ? "Interactive viewer disabled (?viewer=off)."
+      : "Interactive 3D is unavailable in this browser.";
     viewer.querySelectorAll("video").forEach((video) => {
       video.pause();
       video.removeAttribute("src");

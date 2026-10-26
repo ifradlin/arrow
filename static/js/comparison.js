@@ -1,4 +1,5 @@
 import { installLoader } from "./site.js";
+import { viewerAvailable } from "./viewer-bootstrap.js";
 import { models, scenes, predictionKey, viewerExamples } from "./comparison-scenes.js";
 import { comparisonPickSide } from "./comparison-picking.js";
 import { alignCameras } from "./comparison-registration.js";
@@ -34,12 +35,14 @@ const revealElements = (shell) =>
     ":scope > .viewer-stage > .viewer-canvas, :scope > .viewer-stage > .rgb-inset, :scope > .viewer-stage > .static-observations",
   );
 let installViewer;
-import("./viewer.js")
-  .then((module) => {
-    installViewer = module.installViewer;
-    update();
-  })
-  .catch((error) => console.error("Could not initialize comparison viewer", error));
+if (viewerAvailable) {
+  import("./viewer.js")
+    .then((module) => {
+      installViewer = module.installViewer;
+      update();
+    })
+    .catch((error) => console.error("Could not initialize comparison viewer", error));
+}
 
 for (const [side, reference] of [
   ["arrow", true],
