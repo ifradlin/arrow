@@ -18,8 +18,9 @@
 <p align="center">RWTH Aachen University</p>
 
 <p align="center">
-  <a href="https://vision.rwth-aachen.de/arrow"><img src="https://img.shields.io/badge/Project-Page-e77732?style=flat" alt="Project page" /></a>
   <a href="https://arxiv.org/abs/2610.01314"><img src="https://img.shields.io/badge/arXiv-2610.01314-b31b1b?style=flat" alt="arXiv: 2610.01314" /></a>
+  <a href="https://ifradlin.github.io/arrow/"><img src="https://img.shields.io/badge/Project-Page-e77732?style=flat" alt="Project page" /></a>
+  <a href="https://huggingface.co/spaces/ifradlin/arrow-4d-reconstruction"><img src="https://img.shields.io/badge/Hugging_Face-Demo-ffd21e?style=flat" alt="Demo" /></a>
   <a href="#citation"><img src="https://img.shields.io/badge/BibTeX-Citation-4b5563?style=flat" alt="BibTeX citation" /></a>
 </p>
 
@@ -41,7 +42,7 @@
 
 ARROW achieves state-of-the-art 3D tracking on WorldTrack and TAPVid-3D and outperforms dedicated multi-view trackers on an adapted **RGB-only MVTracker benchmark**, remaining competitive on 3D reconstruction tasks.
 
-Visit the [project page](https://vision.rwth-aachen.de/arrow) for interactive examples and results.
+Visit the [project page](https://ifradlin.github.io/arrow/) for interactive examples and results.
 
 ## Installation
 
