@@ -27,7 +27,7 @@ function saveSelection() {
 }
 const viewers = new Map();
 const template = $("[data-comparison-template]");
-const sharedView = { time: 0, camera: null };
+const sharedView = { time: 0, camera: null, frustumsVisible: true };
 let revealVersion = 0;
 const cameraFits = new Map();
 const revealElements = (shell) =>
@@ -105,6 +105,7 @@ const syncBaselineView = () => {
     baseline?.setFrustumRadius(reference.getSceneRadius());
   }
   baseline?.setFrame(sharedView.time);
+  baseline?.setFrustumsVisible(sharedView.frustumsVisible);
   const camera = reference?.getCameraState() || sharedView.camera;
   if (camera) baseline?.setCameraState(camera);
   return !stage.classList.contains("is-comparing") || ready;
@@ -118,6 +119,10 @@ arrowShell.addEventListener("viewercamerachange", (event) => {
   if (event.target !== arrowShell) return;
   sharedView.camera = event.detail;
   viewers.get("baseline").controller?.setCameraState(sharedView.camera);
+});
+arrowShell.addEventListener("viewerfrustumschange", (event) => {
+  sharedView.frustumsVisible = event.detail.visible;
+  viewers.get("baseline").controller?.setFrustumsVisible(sharedView.frustumsVisible);
 });
 arrowShell.querySelector("[data-settings-menu]").addEventListener("input", (event) => {
   const attribute = [...event.target.attributes].find(({ name }) => name.startsWith("data-"))?.name;

@@ -1664,6 +1664,10 @@ h3 {
   transform: translateY(-1px);
 }
 
+.viewer-settings-button[data-frustums-toggle][aria-pressed="false"] {
+  color: var(--muted);
+}
+
 @media (hover: hover) and (pointer: fine) {
   .viewer-settings-button:hover {
     border-color: var(--blue);

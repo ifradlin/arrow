@@ -55,7 +55,7 @@ import {
 import { observeViewport } from "./viewport.js";
 import { whenStylesReady } from "./styles-ready.js";
 import { installPickerIndicator } from "./picker-indicator.js";
-import { installTouchNavigation, pointerDrag } from "./viewer-touch.js";
+import { installTouchNavigation, pointerDrag, pointerRoll } from "./viewer-touch.js";
 import { installBufferedIndicator, bufferingLoader, prebuffer } from "./viewer-buffering.js";
 import { paintViewerScrubber, resetViewerTimeline, selectCapability, setCapabilityURL } from "./viewer-selection.js";
 import { fetchManifest } from "./viewer-manifests.js";
@@ -218,6 +218,8 @@ export function installViewer(
   const frameTotal = timelineControls.querySelector("[data-frame-total]");
   const playButton = timelineControls.querySelector("[data-play-toggle]");
   const resetButton = viewer.querySelector("[data-reset-view]");
+  const inputCameraButton = viewer.querySelector("[data-input-camera]");
+  const frustumsButton = viewer.querySelector("[data-frustums-toggle]");
   const settingsButton = viewer.querySelector("[data-settings-toggle]");
   const settingsMenu = viewer.querySelector("[data-settings-menu]");
   const confidenceCutoffInput = viewer.querySelector("[data-confidence-cutoff]");
@@ -234,6 +236,14 @@ export function installViewer(
   const meta = viewer.querySelector("[data-viewer-meta]");
   const picker = configuredExamples ? null : section.querySelector(".example-picker");
   let playing = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let frustumsVisible = true;
+  const setFrustumsVisible = (visible) => {
+    frustumsVisible = visible;
+    frustumsButton.setAttribute("aria-pressed", String(visible));
+    frustumsButton.title = `${visible ? "Hide" : "Show"} camera frustums and image planes`;
+    frustumsButton.querySelector("i").className = visible ? "fa-solid fa-eye" : "fa-solid fa-eye-slash";
+    mountedViewer?.updateCameras();
+  };
 
   const syncPlayButton = () => {
     playButton.setAttribute("aria-pressed", String(playing));
@@ -306,6 +316,8 @@ export function installViewer(
       example.mode === "static_collection" ? "Interactive 3D scene" : "Interactive 4D scene",
     );
     viewer.classList.remove("is-following-input-camera");
+    inputCameraButton.disabled = true;
+    frustumsButton.disabled = true;
     rgbInset.setAttribute("aria-pressed", "false");
     const inputAction = example.mode === "multi_view_video" ? "Select camera 1 view" : "Follow input camera";
     rgbInset.setAttribute("aria-label", inputAction);
@@ -717,11 +729,38 @@ export function installViewer(
     const controls = new OrbitControls(camera, inputElement);
     const updateOrbit = controls.update.bind(controls);
     const orbitUp = new THREE.Vector3(0, 1, 0);
+    const pointers = new Set();
+    const momentum = { rotation: new THREE.Spherical(0, 0, 0), pan: new THREE.Vector3(), time: 0 };
+    const stopMomentum = () => {
+      controls._sphericalDelta.set(0, 0, 0);
+      controls._panOffset.set(0, 0, 0);
+      momentum.rotation.set(0, 0, 0);
+      momentum.pan.set(0, 0, 0);
+      momentum.time = performance.now();
+    };
+    const hasMomentum = () =>
+      Math.abs(controls._sphericalDelta.theta) + Math.abs(controls._sphericalDelta.phi) > 1e-5 ||
+      controls._panOffset.lengthSq() > radius * radius * 1e-10;
     // r169 caches this basis at construction, but snapped cameras can have any roll/up axis.
     controls.update = (delta) => {
       controls._quat.setFromUnitVectors(camera.up, orbitUp);
       controls._quatInverse.copy(controls._quat).invert();
-      return updateOrbit(delta);
+      // Follow the pointer directly; damping only applies after release.
+      controls.enableDamping = pointers.size === 0;
+      controls.dampingFactor = 1 - 0.88 ** ((delta ?? 1 / 60) * 60);
+      if (
+        pointers.size &&
+        (controls._sphericalDelta.theta || controls._sphericalDelta.phi || controls._panOffset.lengthSq())
+      ) {
+        const now = performance.now();
+        const scale = (1000 / 60) / Math.max(8, now - momentum.time) / controls.dampingFactor;
+        momentum.rotation.set(0, controls._sphericalDelta.phi * scale, controls._sphericalDelta.theta * scale);
+        momentum.pan.copy(controls._panOffset).multiplyScalar(scale);
+        momentum.time = now;
+      }
+      const changed = updateOrbit(delta);
+      if (!pointers.size && !hasMomentum()) stopMomentum();
+      return changed;
     };
     controls.rotateSpeed = matchMedia("(pointer: coarse)").matches ? 0.35 : 1;
     listen(
@@ -732,8 +771,8 @@ export function installViewer(
       },
       { capture: true },
     );
-    controls.enableDamping = false;
     controls.enablePan = true;
+    controls.mouseButtons.MIDDLE = -1;
     controls.minDistance = 0.3;
     controls.maxDistance = 30;
     const touchNavigation = installTouchNavigation(
@@ -1187,7 +1226,7 @@ export function installViewer(
     const updateCameras = () => {
       invalidate();
       for (const item of cameraFrames) {
-        if (!camerasShown && !(isStatic ? showAllStaticCameras : keepCameras)) {
+        if (!frustumsVisible || (!camerasShown && !(isStatic ? showAllStaticCameras : keepCameras))) {
           item.group.visible = false;
           continue;
         }
@@ -1491,6 +1530,7 @@ export function installViewer(
     const reset = (instant = false) => {
       // Reset is the neutral director view, never a reset of the linked input
       // camera pose. Release the attachment before animating there.
+      stopMomentum();
       cancelCameraAnimation();
       if (inputCameraLinked) setInputCameraLink(false);
       clearCameraSelection();
@@ -1531,6 +1571,7 @@ export function installViewer(
     const moveToCamera = (cameraFrame, cameraView = 0, { linkAfter = false, resumePlayback = false } = {}) => {
       const item = cameraFrames.find((candidate) => candidate.frame === cameraFrame && candidate.view === cameraView);
       if (!item) return false;
+      stopMomentum();
       cancelCameraAnimation();
       item.group.updateWorldMatrix(true, false);
       const endPosition = new THREE.Vector3();
@@ -1746,11 +1787,21 @@ export function installViewer(
       updateCameraProjection();
     };
     const orbitDrag = pointerDrag(releaseCameraSelection);
+    const roll = pointerRoll((angle) => {
+      releaseCameraSelection();
+      camera.up.applyAxisAngle(controls.target.clone().sub(camera.position).normalize(), angle).normalize();
+      controls.update();
+      invalidate();
+    });
     listen(
       inputElement,
       "pointerdown",
       (event) => {
-        if (controls.enabled) orbitDrag.down(event);
+        if (!controls.enabled) return;
+        pointers.add(event.pointerId);
+        stopMomentum();
+        orbitDrag.down(event);
+        roll.down(event);
       },
       { capture: true },
     );
@@ -1758,16 +1809,48 @@ export function installViewer(
       inputElement,
       "pointermove",
       (event) => {
-        if (controls.enabled) orbitDrag.move(event);
+        if (!controls.enabled) return;
+        orbitDrag.move(event);
+        roll.move(event);
       },
       { capture: true },
     );
-    for (const type of ["pointerup", "pointercancel"]) listen(inputElement, type, orbitDrag.end, { capture: true });
+    for (const type of ["pointerup", "pointercancel", "lostpointercapture"])
+      listen(
+        inputElement,
+        type,
+        (event) => {
+          orbitDrag.end(event);
+          roll.end(event);
+          if (!pointers.delete(event.pointerId)) return;
+          if (event.type !== "pointerup" || !controls.enabled) stopMomentum();
+          else if (!pointers.size) {
+            if (performance.now() - momentum.time < 80 && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+              controls._sphericalDelta.copy(momentum.rotation);
+              controls._panOffset.copy(momentum.pan);
+              scheduler.wake();
+            } else stopMomentum();
+          }
+        },
+        { capture: true },
+      );
+    listen(window, "blur", () => {
+      pointers.clear();
+      roll.cancel();
+      stopMomentum();
+    });
+    inputElement.setAttribute(
+      "aria-description",
+      "Drag to orbit, right-drag to pan, scroll to zoom, middle-drag to roll. Touch: drag to orbit, pinch to zoom, two-finger drag to pan, twist to roll.",
+    );
     listen(
       inputElement,
       "wheel",
       (event) => {
-        if (controls.enabled && (event.deltaX || event.deltaY)) releaseCameraSelection();
+        if (controls.enabled && (event.deltaX || event.deltaY)) {
+          stopMomentum();
+          releaseCameraSelection();
+        }
       },
       { capture: true, passive: true },
     );
@@ -1839,7 +1922,7 @@ export function installViewer(
     // Playback advances time every vsync so frame changes land on time, but the
     // canvas is only redrawn when the displayed timestep or camera changes.
     const playbackAdvancing = () => !externalControl && playing && !pendingTimeline && !resetAnimation?.resumePlayback;
-    animating = () => playbackAdvancing() || resetAnimation !== null || movementKeys.size > 0;
+    animating = () => playbackAdvancing() || resetAnimation !== null || movementKeys.size > 0 || hasMomentum();
     renderFrame = (now, previous) => {
       syncBuffered();
       if (stream && streamRevision !== stream.revision) {
@@ -1895,7 +1978,7 @@ export function installViewer(
         if (!directOrientation) controls.update();
         invalidate();
       } else if (!externalControl) {
-        controls.update();
+        controls.update(delta || 1 / 60);
       }
       if (scheduler.consume()) {
         syncFrustumEdges();
@@ -1906,6 +1989,9 @@ export function installViewer(
     const setActive = (active) => {
       if (!active) {
         scheduler.stop();
+        pointers.clear();
+        roll.cancel();
+        stopMomentum();
         movementKeys.clear();
         return;
       }
@@ -1987,6 +2073,11 @@ export function installViewer(
       }
     });
     listen(resetButton, "click", () => reset());
+    frustumsButton.disabled = cameraFrames.length === 0;
+    listen(frustumsButton, "click", () => {
+      setFrustumsVisible(!frustumsVisible);
+      viewer.dispatchEvent(new CustomEvent("viewerfrustumschange", { detail: { visible: frustumsVisible } }));
+    });
     if (isStatic) {
       staticObservations.querySelectorAll("[data-static-frame]").forEach((card) => {
         listen(card, "click", () => {
@@ -2008,14 +2099,29 @@ export function installViewer(
       });
     }
     const selectInputCamera = () => {
+      if (isStatic) {
+        const cameraFrame = selectedStaticFrame ?? example.observationFrames?.[0] ?? cameraFrames[0]?.frame;
+        const card = staticObservations.querySelector(`[data-static-frame="${cameraFrame}"]`);
+        if (card) selectCameraCard(card);
+        selectedStaticFrame = cameraFrame;
+        return moveToCamera(cameraFrame);
+      }
       if (inputCameraLinked || resetAnimation?.linkAfter) return false;
       cancelCameraAnimation();
+      if (isMulti) {
+        const card = staticObservations.querySelector(`[data-camera-view="${selectedInputView}"]`);
+        if (card) selectCameraCard(card);
+      }
       const resumePlayback = playing;
       if (resumePlayback) inset.pause();
       if (!moveToCamera(frame, selectedInputView, { linkAfter: true, resumePlayback }) && resumePlayback)
         setPlaying(true);
       return true;
     };
+    inputCameraButton.disabled = cameraFrames.length === 0;
+    listen(inputCameraButton, "click", (event) => {
+      if (selectInputCamera() && event.detail > 0) inputElement.focus({ preventScroll: true });
+    });
     listen(rgbInset, "click", (event) => {
       if (selectInputCamera() && event.detail > 0) inputElement.focus({ preventScroll: true });
     });
@@ -2074,6 +2180,7 @@ export function installViewer(
         movementKeys.add(event.code);
         scheduler.wake();
         if (moving) {
+          stopMomentum();
           releaseCameraSelection();
         }
         event.preventDefault();
@@ -2101,6 +2208,7 @@ export function installViewer(
       setActive,
       resize,
       render,
+      updateCameras,
       getCameraState: cameraState,
       hitTestFrustum,
       getImagePlane,
@@ -2173,6 +2281,7 @@ export function installViewer(
     };
   }
   return {
+    setFrustumsVisible,
     resize() {
       mountedViewer?.resize();
     },

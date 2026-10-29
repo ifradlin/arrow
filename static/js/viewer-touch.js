@@ -58,6 +58,41 @@ export function pointerDrag(onDrag) {
   };
 }
 
+export function pointerRoll(onRoll) {
+  const pointers = new Map();
+  return {
+    down(event) {
+      if (event.pointerType !== "touch" && event.button !== 1) return;
+      pointers.set(event.pointerId, [event.clientX, event.clientY]);
+      if (event.button === 1) event.preventDefault();
+    },
+    move(event) {
+      const point = pointers.get(event.pointerId);
+      if (!point) return;
+      let angle = 0;
+      if (event.pointerType === "touch" && pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        const previous = Math.atan2(b[1] - a[1], b[0] - a[0]);
+        point[0] = event.clientX;
+        point[1] = event.clientY;
+        const next = Math.atan2(b[1] - a[1], b[0] - a[0]);
+        angle = -Math.atan2(Math.sin(next - previous), Math.cos(next - previous));
+      } else {
+        if (event.pointerType !== "touch") angle = (event.clientX - point[0]) * 0.004;
+        point[0] = event.clientX;
+        point[1] = event.clientY;
+      }
+      if (angle) onRoll(angle);
+    },
+    end(event) {
+      pointers.delete(event.pointerId);
+    },
+    cancel() {
+      pointers.clear();
+    },
+  };
+}
+
 export function installTouchHint(button, signal) {
   let animation;
   let visible;
