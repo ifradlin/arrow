@@ -33,11 +33,15 @@ class ObservationBatch:
     def transform_points(self, xy: torch.Tensor, source_frame: torch.Tensor | int) -> torch.Tensor:
         """Map original-image pixel centers to model pixels in each seed's source frame."""
         xy = xy.float()
-        transforms = torch.tensor(
-            [frame["original_to_input"] for frame in self.frame_info], device=xy.device, dtype=xy.dtype
+        scales = torch.tensor(
+            [[f["resized_size"][1] / f["original_size"][1],
+              f["resized_size"][0] / f["original_size"][0]] for f in self.frame_info],
+            device=xy.device, dtype=xy.dtype,
         )
-        transform = transforms[source_frame]
-        return (transform[..., :2, :2] @ xy.unsqueeze(-1)).squeeze(-1) + transform[..., :2, 2]
+        padding = torch.tensor([f["padding"][:2] for f in self.frame_info],
+                               device=xy.device, dtype=xy.dtype)
+        scale = scales[source_frame]
+        return torch.where(scale == 1, xy, (xy + .5) * scale - .5) + padding[source_frame]
 
 
 def load_input(source, *, start=0, stride=1, max_frames=24, max_side=504, frame_indices=None):

@@ -76,8 +76,8 @@ From the command line, pass one video or image folder per camera with `--multi-v
 ```bash
 uv run arrow infer stream_1.mp4 stream_2.mp4 stream_3.mp4 --multi-view \
   --start 0 --end 24 --stride 6 --track-stride 4 \
-  --output results/multiview.npz
-uv run arrow-viewer --scene results/multiview.npz
+  --output workspace/results/multiview.npz
+uv run arrow-viewer --scene workspace/results/multiview.npz
 ```
 
 This selects frame indices **0, 6, 12, 18** from every camera. `--end` is exclusive

@@ -25,12 +25,21 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+eval = [
+  "opencv-python-headless>=4.11,<5",
+  "torchpcl==0.2.2; python_version >= '3.13' and sys_platform == 'linux'",
+]
 viewer = [
   "fastapi>=0.115,<1",
   "pydantic>=2,<3",
   "uvicorn>=0.34,<1",
   "python-multipart>=0.0.20",
   "matplotlib>=3.9,<4",
+]
+preprocess = [
+    "scipy>=1.15,<2",
+    "opencv-python-headless>=4.11,<5",
+    "pyarrow>=19,<24",
 ]
 
 [project.scripts]
@@ -53,9 +62,16 @@ line-length = 100
 default-groups = []
 
 [tool.uv.sources]
+torchpcl = { index = "torchpcl" }
 torch = [
   { index = "pytorch-cu130", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
 ]
+
+[[tool.uv.index]]
+name = "torchpcl"
+url = "https://schmiddo.github.io/torchpcl/wheels/torch2.14.0-cu130/"
+format = "flat"
+explicit = true
 
 [[tool.uv.index]]
 name = "pytorch-cu130"
@@ -66,7 +82,7 @@ explicit = true
 select = ["E4", "E7", "E9", "F"]
 
 [tool.pyright]
-include = ["src", "configs", ".local/scripts", "tests"]
+include = ["src", "configs", "tests"]
 venvPath = "."
 venv = ".venv"
 typeCheckingMode = "basic"

@@ -2,7 +2,7 @@ from dataclasses import fields
 
 import torch
 
-from ..queries import spread_grid, track_queries
+from ..queries import ReferenceFrame, spread_grid, track_queries
 from ..types import Predictions, Queries, Result
 
 
@@ -13,7 +13,7 @@ def tracking_queries(
     stride=2,
     source_frame: torch.Tensor | list[int] | int = 0,
     target_frames=None,
-    reference_frame=0,
+    reference_frame: ReferenceFrame = 0,
 ):
     """Track explicit seeds, or seed a grid about `stride` px apart, edge to edge, in each
     supplied source frame.

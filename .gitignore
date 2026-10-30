@@ -4,6 +4,7 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 results/
+/workspace
 frontend/node_modules/
 frontend/*.tsbuildinfo
 dist/
@@ -11,4 +12,5 @@ dist/
 tests/
 frontend/scripts/*-test.mjs
 .local/
+/data/
 /hf

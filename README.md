@@ -31,8 +31,9 @@
 
 ## Updates
 
-**Coming next:** evaluation and training code.
+**Coming next:** training code.
 
+- **2026-11-03:** [Evaluation code](docs/EVAL.md) is released.
 - **2026-10-12:** Inference code, pretrained weights, and an interactive viewer are released.
 - **2026-10-01:** Our [paper](https://arxiv.org/abs/2610.01314) is available on arXiv.
 
@@ -85,16 +86,16 @@ predictions. This example takes every third video frame and uses the remaining
 defaults from [configs/inference.py](configs/inference.py):
 
 ```bash
-uv run arrow infer assets/videos/railway.mp4 --stride 3 --output results/railway.npz
+uv run arrow infer assets/videos/railway.mp4 --stride 3 --output workspace/results/railway.npz
 ```
 
-The command saves `results/railway.npz` with the prepared input images, every
+The command saves `workspace/results/railway.npz` with the prepared input images, every
 query (pixel, source, target, and reference frame), its predictions (3D points,
 confidence, visibility, normals, ...), and metadata describing the frames and
 tasks. View the saved results in the viewer:
 
 ```bash
-uv run arrow-viewer --scene results/railway.npz
+uv run arrow-viewer --scene workspace/results/railway.npz
 ```
 
 This opens the saved predictions as a scene at **http://127.0.0.1:7860**.
@@ -116,6 +117,58 @@ Weights download on first use. A local model directory also works; pass it to
 `from_pretrained()` or use `--checkpoint /path/to/model`.
 See [inference examples](docs/INFERENCE.md) for selected-point tracking,
 multi-view input, poses, and saved predictions.
+
+## Code structure
+
+```text
+src/arrow/
+├── models/              # Encoder and query decoder
+├── infer/               # Input loading and inference
+├── tasks/               # Reconstruction, tracking and pose queries
+├── eval/
+│   ├── preprocess/      # Dataset preparation
+│   ├── dataset.py       # Shared evaluation data loading
+│   ├── metrics/         # Numerical scoring and reductions
+│   └── tasks/           # Evaluation protocols
+└── viewer/              # Interactive viewer
+configs/                 # Model, inference and evaluation settings
+docs/                    # Usage and dataset guides
+assets/                  # Example inputs and figures
+```
+
+## Evaluation
+
+**1. Prepare the datasets.** Follow the [download and preprocessing instructions](docs/EVAL.md#prepare-datasets).
+The tracking evaluations use:
+
+```text
+data/eval/
+├── worldtrack/          # ADT, DynamicReplica, PointOdyssey, PStudio
+├── tapvid3d/            # ADT, DriveTrack, PStudio minival
+└── mvtracker/           # Kubric, DexYCB, PStudio
+```
+
+**2. Run evaluation.** Weights download automatically from Hugging Face.
+
+```bash
+# WorldTrack
+uv run python -m arrow.eval --config configs/eval/benchmarks/worldtrack.py
+
+# TAPVid-3D: RGB-only camera and world protocols
+uv run python -m arrow.eval --config configs/eval/benchmarks/tapvid3d_camera.py
+uv run python -m arrow.eval --config configs/eval/benchmarks/tapvid3d_world.py
+
+# MVTracker: RGB-only multi-view tracking
+uv run python -m arrow.eval --config configs/eval/benchmarks/mvtracker.py
+```
+
+Results are saved to `workspace/results/<config-name>/summary.json` and `scenes.jsonl`.
+See the [evaluation guide](docs/EVAL.md) for coverage, metrics, overrides and distributed runs.
+Additional pose, video-depth and reconstruction protocols use the same shared evaluation tasks.
+
+## Training
+
+Coming next.
 
 ## Citation
 

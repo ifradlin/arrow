@@ -22,7 +22,7 @@ Defaults are in [configs/viewer.py](../configs/viewer.py), which inherits the
 
 ```bash
 # Keep each run in its own session subfolder after exit
-uv run arrow-viewer --overrides session.directory=results/sessions
+uv run arrow-viewer --overrides session.directory=workspace/results/sessions
 ```
 
 Inactive tabs cache up to 4 GiB on the server and an estimated 1 GiB per browser.
@@ -105,7 +105,7 @@ frame's camera coordinates and relative scale.
 To start the viewer with a saved file, including predictions from `arrow infer`:
 
 ```bash
-uv run arrow-viewer --scene results/railway.npz
+uv run arrow-viewer --scene workspace/results/railway.npz
 ```
 
 ## Log from Python

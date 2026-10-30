@@ -1,10 +1,12 @@
-"""Raw media reading and source-frame metadata."""
+"""Media IO, source-frame selection and prepared dataset assets."""
 
+import hashlib
 from operator import index as integer_index
 from pathlib import Path
 import re
 
-from PIL import Image, ImageOps
+import numpy as np
+from PIL import Image, ImageOps, PngImagePlugin
 
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"}
 
@@ -120,3 +122,51 @@ def read_media(source, *, start=0, stride=1, max_frames=24, frame_indices=None):
     if not images:
         raise ValueError("No frames selected from the input")
     return images, frames
+
+
+def file_sha256(path):
+    with Path(path).open("rb") as stream:
+        return hashlib.file_digest(stream, "sha256").hexdigest()
+
+
+def scene_sha256(path, files=None):
+    """Fingerprint all prepared assets, or an explicit set of source files."""
+    path = Path(path)
+    digest = hashlib.sha256()
+    files = (p for p in path.rglob("*") if p.is_file()) if files is None else files
+    for file in sorted(files):
+        digest.update(file.relative_to(path).as_posix().encode() + b"\0")
+        digest.update(bytes.fromhex(file_sha256(file)))
+    return digest.hexdigest()
+
+
+def read_depth(path):
+    """Read prepared log16 depth, preserving NaN/inf sentinels."""
+    with Image.open(path) as image:
+        near, far = float(image.info["near"]), float(image.info["far"])
+        encoded = np.array(image)
+    fraction = (encoded.astype(np.float32) - 1) / 65533
+    depth = near ** (1 - fraction) * far ** fraction
+    depth[encoded == 0] = np.nan
+    depth[encoded == 65535] = np.inf
+    return depth
+
+
+def write_depth(path, depth):
+    """Write log16 PNG depth with near/far metadata (NaN=0, infinity=65535)."""
+    depth = np.asarray(depth, dtype=np.float32)
+    finite = np.isfinite(depth)
+    if finite.any():
+        near = max(depth[finite].min(), 1e-5)
+        far = max(near * 1.1, min(depth[finite].max(), near * 1e5))
+        encoded = 1 + np.round((np.log(np.nan_to_num(depth, nan=0).clip(near, far) / near)
+                               / np.log(far / near)).clip(0, 1) * 65533).astype(np.uint16)
+    else:
+        near = far = 1
+        encoded = np.zeros(depth.shape, dtype=np.uint16)
+    encoded[np.isnan(depth)] = 0
+    encoded[np.isinf(depth)] = 65535
+    metadata = PngImagePlugin.PngInfo()
+    metadata.add_text("near", str(near))
+    metadata.add_text("far", str(far))
+    Image.fromarray(encoded).save(path, pnginfo=metadata, compress_level=7)

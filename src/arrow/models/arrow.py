@@ -88,11 +88,6 @@ class ARROW(nn.Module, PyTorchModelHubMixin):
         with torch.device("meta" if strict else "cpu"):
             model = cls.from_config(config)
         model.load_state_dict(weights, strict=strict, assign=True)
-        resolved = path.resolve()
-        model.provenance = {
-            "checkpoint": model_id,
-            "revision": resolved.name if resolved.parent.name == "snapshots" else None,
-        }
         return model.to(_resolve_device(device if device is not None else map_location)).eval()
 
     def encode(self, images, *, anchor_frame=None):

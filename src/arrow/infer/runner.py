@@ -323,7 +323,6 @@ def infer(
         torch.cuda.synchronize(device)
     metadata = {
         "format_version": 1,
-        "model": getattr(model, "provenance", {}),
         "coordinate_frame": "reference_camera; x right, y down, z forward",
         "scale": "model-predicted relative scale; not guaranteed metric",
         "query_order": "xy pixel centers; groups then target/source frame then point",
